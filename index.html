@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+
+  <title>MEOW AUDIO APP - TUI EDITION</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.min.js"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600;700&display=swap');
+
+    :root {
+      --bg: #0d0e11;
+      --panel-bg: #13151a;
+      --text-main: #4af626;
+      --text-accent: #ff007f;
+      --text-amber: #ffb000;
+      --text-cyan: #00f0ff;
+      --text-dim: #5c6370;
+      --border-color: #2b303a;
+      --highlight: #1e222b;
+      --font-mono: 'Fira Code', 'Courier New', Courier, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: var(--font-mono);
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      padding: 15px;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      line-height: 1.4;
+    }
+
+    .tui-container {
+      width: 100%;
+      max-width: 900px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    /* Terminal Box Styling */
+    .tui-box {
+      background: var(--panel-bg);
+      border: 1px solid var(--text-main);
+      box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.8);
+      position: relative;
+      padding: 15px;
+    }
+
+    .tui-box-header {
+      position: absolute;
+      top: -12px;
+      left: 12px;
+      background: var(--bg);
+      padding: 0 8px;
+      color: var(--text-amber);
+      font-weight: bold;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+    }
+
+    .tui-header-main {
+      border-color: var(--text-cyan);
+      text-align: center;
+      padding: 20px;
+    }
+
+    .tui-title {
+      color: var(--text-cyan);
+      font-size: 1.4rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-shadow: 0 0 5px rgba(0, 240, 255, 0.4);
+    }
+
+    .tui-subtitle {
+      color: var(--text-dim);
+      font-size: 0.8rem;
+      margin-top: 5px;
+    }
+
+    /* Navigation / Tabs style TUI */
+    .tui-tabs {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+
+    .tui-tab-btn {
+      background: var(--bg);
+      color: var(--text-dim);
+      border: 1px solid var(--border-color);
+      padding: 8px 12px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+
+    .tui-tab-btn:hover,
+    .tui-tab-btn.active {
+      color: var(--bg);
+      background: var(--text-main);
+      border-color: var(--text-main);
+      box-shadow: 2px 2px 0px var(--text-accent);
+    }
+
+    /* Track Cover Art / ASCII Display */
+    .player-display {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .album-art-container {
+      width: 110px;
+      height: 110px;
+      border: 1px dashed var(--text-amber);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #000;
+      overflow: hidden;
+    }
+
+    .album-art-container img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .track-info-details {
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .track-title-text {
+      color: var(--text-amber);
+      font-size: 1.1rem;
+      font-weight: bold;
+      word-break: break-all;
+    }
+
+    .track-artist-text {
+      color: var(--text-main);
+      font-size: 0.9rem;
+    }
+
+    /* Standard Controls & Buttons */
+    .tui-btn {
+      background: var(--bg);
+      color: var(--text-main);
+      border: 1px solid var(--text-main);
+      padding: 8px 14px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+
+    .tui-btn:hover {
+      background: var(--text-main);
+      color: var(--bg);
+      box-shadow: 2px 2px 0px var(--text-amber);
+    }
+
+    .tui-btn-accent {
+      border-color: var(--text-accent);
+      color: var(--text-accent);
+    }
+
+    .tui-btn-accent:hover {
+      background: var(--text-accent);
+      color: #fff;
+      box-shadow: 2px 2px 0px var(--text-cyan);
+    }
+
+    .tui-btn-amber {
+      border-color: var(--text-amber);
+      color: var(--text-amber);
+    }
+
+    .tui-btn-amber:hover {
+      background: var(--text-amber);
+      color: var(--bg);
+      box-shadow: 2px 2px 0px var(--text-main);
+    }
+
+    .controls-grid {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    /* Sliders / Ranges */
+    .tui-slider-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      margin-bottom: 10px;
+      width: 100%;
+    }
+
+    .tui-slider-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: var(--text-amber);
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 8px;
+      background: var(--bg);
+      border: 1px solid var(--text-dim);
+      outline: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px;
+      height: 14px;
+      background: var(--text-main);
+      cursor: pointer;
+      border: 1px solid var(--bg);
+    }
+
+    /* Lists / Playlist */
+    .tui-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-height: 250px;
+      overflow-y: auto;
+    }
+
+    .tui-list-item {
+      background: var(--bg);
+      border: 1px solid var(--border-color);
+      padding: 8px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+
+    .tui-list-item:hover,
+    .tui-list-item.active {
+      border-color: var(--text-amber);
+      background: var(--highlight);
+      color: var(--text-amber);
+    }
+
+    /* Inputs */
+    .tui-input, select {
+      background: var(--bg);
+      color: var(--text-main);
+      border: 1px solid var(--text-main);
+      padding: 8px 10px;
+      font-size: 0.85rem;
+      outline: none;
+      width: 100%;
+    }
+
+    .tui-input:focus, select:focus {
+      border-color: var(--text-accent);
+      box-shadow: 0 0 5px rgba(255, 0, 127, 0.5);
+    }
+
+    /* Equalizer Sliders layout */
+    .eq-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+      gap: 10px;
+      align-items: flex-end;
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    .eq-slider-vertical {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .eq-slider-vertical input[type="range"] {
+      writing-mode: bt-lr;
+      -webkit-appearance: slider-vertical;
+      width: 12px;
+      height: 100px;
+    }
+
+    /* Utilities */
+    .hidden {
+      display: none !important;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--border-color);
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--text-main);
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="tui-container">
+
+    <!-- Title Box -->
+    <div class="tui-box tui-header-main">
+      <div class="tui-title">[ MEOW AUDIO APP :: TUI EDITION ]</div>
+      <div class="tui-subtitle">Sistema de Procesamiento y Reproducción de Audio v19.0</div>
+    </div>
+
+    <!-- Navigation Bar -->
+    <div class="tui-tabs">
+      <button class="tui-tab-btn active" onclick="switchTab('player-tab')">[1] Player</button>
+      <button class="tui-tab-btn" onclick="switchTab('eq-tab')">[2] Equalizer</button>
+      <button class="tui-tab-btn" onclick="switchTab('trim-tab')">[3] Trim & Edit</button>
+      <button class="tui-tab-btn" onclick="switchTab('recorder-tab')">[4] Recorder</button>
+      <button class="tui-tab-btn" onclick="switchTab('tags-tab')">[5] ID3 Tags</button>
+    </div>
+
+    <!-- TAB 1: PLAYER & PLAYLIST -->
+    <div id="player-tab" class="tab-content">
+      <div class="tui-box">
+        <div class="tui-box-header">Audio Player</div>
+
+        <div class="player-display">
+          <div class="album-art-container" id="cover-art">
+            <span style="color: var(--text-dim); font-size:0.7rem;">[NO COVER]</span>
+          </div>
+          <div class="track-info-details">
+            <div class="track-title-text" id="track-title">Sin archivo seleccionado</div>
+            <div class="track-artist-text" id="track-artist">--</div>
+            <div style="font-size:0.75rem; color:var(--text-dim); margin-top:5px;" id="track-album">--</div>
+          </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="tui-slider-group">
+          <div class="tui-slider-label">
+            <span id="current-time">00:00</span>
+            <span id="duration-time">00:00</span>
+          </div>
+          <input type="range" id="seek-bar" value="0" min="0" max="100" step="0.1">
+        </div>
+
+        <!-- Player Controls -->
+        <div class="controls-grid">
+          <button class="tui-btn" id="prev-btn">&lt;&lt; Prev</button>
+          <button class="tui-btn tui-btn-amber" id="play-btn">Play / Pause</button>
+          <button class="tui-btn" id="next-btn">Next &gt;&gt;</button>
+          <button class="tui-btn tui-btn-accent" id="stop-btn">Stop</button>
+        </div>
+
+        <!-- Volume & Pitch Controls -->
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-top:15px;">
+          <div class="tui-slider-group">
+            <div class="tui-slider-label">
+              <span>Volume</span>
+              <span id="vol-val">100%</span>
+            </div>
+            <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="1">
+          </div>
+
+          <div class="tui-slider-group">
+            <div class="tui-slider-label">
+              <span>Speed / Pitch</span>
+              <span id="speed-val">1.0x</span>
+            </div>
+            <input type="range" id="speed-slider" min="0.5" max="2" step="0.05" value="1">
+          </div>
+        </div>
+
+        <!-- File Loader -->
+        <div style="margin-top:15px;">
+          <label class="tui-btn tui-btn-amber" style="width:100%; text-align:center; cursor:pointer;">
+            + Cargar Archivos de Audio
+            <input type="file" id="file-input" multiple accept="audio/*" style="display:none;">
+          </label>
+        </div>
+      </div>
+
+      <!-- Playlist Box -->
+      <div class="tui-box" style="margin-top:15px;">
+        <div class="tui-box-header">Playlist</div>
+        <ul class="tui-list" id="playlist-ul">
+          <li class="tui-list-item" style="color:var(--text-dim);">Lista vacía. Cargue pistas para comenzar.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- TAB 2: EQUALIZER -->
+    <div id="eq-tab" class="tab-content hidden">
+      <div class="tui-box">
+        <div class="tui-box-header">Graphic Equalizer</div>
+        <p style="font-size:0.8rem; color:var(--text-dim); margin-bottom:10px;">Ajusta las frecuencias en tiempo real:</p>
+
+        <div class="eq-grid">
+          <div class="eq-slider-vertical">
+            <span style="font-size:0.7rem;">60Hz</span>
+            <input type="range" class="eq-band" data-band="0" min="-12" max="12" value="0" step="0.5">
+            <span class="eq-val" style="font-size:0.7rem;">0dB</span>
+          </div>
+          <div class="eq-slider-vertical">
+            <span style="font-size:0.7rem;">170Hz</span>
+            <input type="range" class="eq-band" data-band="1" min="-12" max="12" value="0" step="0.5">
+            <span class="eq-val" style="font-size:0.7rem;">0dB</span>
+          </div>
+          <div class="eq-slider-vertical">
+            <span style="font-size:0.7rem;">310Hz</span>
+            <input type="range" class="eq-band" data-band="2" min="-12" max="12" value="0" step="0.5">
+            <span class="eq-val" style="font-size:0.7rem;">0dB</span>
+          </div>
+          <div class="eq-slider-vertical">
+            <span style="font-size:0.7rem;">600Hz</span>
+            <input type="range" class="eq-band" data-band="3" min="-12" max="12" value="0" step="0.5">
+            <span class="eq-val" style="font-size:0.7rem;">0dB</span>
+          </div>
+          <div class="eq-slider-vertical">
+            <span style="font-size:0.7rem;">1kHz</span>
+            <input type="range" class="eq-band" data-band="4" min="-12" max="12" value="0" step="0.5">
+            <span class="eq-val" style="font-size:0.7rem;">0dB</span>
+          </div>
+          <div class="eq-slider-vertical">
+            <span style="font-size:0.7rem;">3kHz</span>
+            <input type="range" class="eq-band" data-band="5" min="-12" max="12" value="0" step="0.5">
+            <span class="eq-val" style="font-size:0.7rem;">0dB</span>
+          </div>
+          <div class="eq-slider-vertical">
+            <span style="font-size:0.7rem;">6kHz</span>
+            <input type="range" class="eq-band" data-band="6" min="-12" max="12" value="0" step="0.5">
+            <span class="eq-val" style="font-size:0.7rem;">0dB</span>
+          </div>
+          <div class="eq-slider-vertical">
+            <span style="font-size:0.7rem;">12kHz</span>
+            <input type="range" class="eq-band" data-band="7" min="-12" max="12" value="0" step="0.5">
+            <span class="eq-val" style="font-size:0.7rem;">0dB</span>
+          </div>
+        </div>
+
+        <div style="margin-top:15px; text-align:right;">
+          <button class="tui-btn tui-btn-accent" id="reset-eq-btn">Reset EQ</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: AUDIO TRIMMER -->
+    <div id="trim-tab" class="tab-content hidden">
+      <div class="tui-box">
+        <div class="tui-box-header">Audio Trimmer / Clipper</div>
+        <p style="font-size:0.8rem; color:var(--text-dim); margin-bottom:15px;">Selecciona el rango de tiempo a recortar de la pista activa:</p>
+
+        <div class="tui-slider-group">
+          <div class="tui-slider-label">
+            <span>Start Time (seg)</span>
+            <span id="trim-start-val">0s</span>
+          </div>
+          <input type="range" id="trim-start" min="0" max="100" value="0" step="0.1">
+        </div>
+
+        <div class="tui-slider-group">
+          <div class="tui-slider-label">
+            <span>End Time (seg)</span>
+            <span id="trim-end-val">0s</span>
+          </div>
+          <input type="range" id="trim-end" min="0" max="100" value="100" step="0.1">
+        </div>
+
+        <div class="controls-grid" style="margin-top:15px;">
+          <button class="tui-btn tui-btn-amber" id="preview-trim-btn">Preview Cut</button>
+          <button class="tui-btn tui-btn-accent" id="export-trim-btn">Export Cut Audio</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: RECORDER -->
+    <div id="recorder-tab" class="tab-content hidden">
+      <div class="tui-box">
+        <div class="tui-box-header">Voice / Audio Recorder</div>
+        <p style="font-size:0.8rem; color:var(--text-dim); margin-bottom:15px;">Graba audio directo desde tu micrófono:</p>
+
+        <div style="text-align:center; padding:15px; border:1px dashed var(--border-color); margin-bottom:15px;">
+          <div id="rec-status" style="color:var(--text-amber); font-size:1.1rem; font-weight:bold;">[READY TO RECORD]</div>
+          <div id="rec-timer" style="color:var(--text-cyan); font-size:1.5rem; margin-top:5px;">00:00</div>
+        </div>
+
+        <div class="controls-grid">
+          <button class="tui-btn tui-btn-accent" id="start-rec-btn">● Record</button>
+          <button class="tui-btn" id="stop-rec-btn" disabled>■ Stop</button>
+        </div>
+
+        <div id="rec-result-container" style="margin-top:15px;" class="hidden">
+          <p style="font-size:0.8rem; color:var(--text-amber); margin-bottom:5px;">Grabación finalizada:</p>
+          <audio id="rec-audio-preview" controls style="width:100%; filter:invert(0.9);"></audio>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 5: ID3 TAGS -->
+    <div id="tags-tab" class="tab-content hidden">
+      <div class="tui-box">
+        <div class="tui-box-header">ID3 Metadata Inspector</div>
+        <p style="font-size:0.8rem; color:var(--text-dim); margin-bottom:15px;">Metadatos extraídos de la pista actual:</p>
+
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <div>
+            <label style="font-size:0.75rem; color:var(--text-amber);">TÍTULO:</label>
+            <input type="text" class="tui-input" id="tag-title-input" readonly value="--">
+          </div>
+          <div>
+            <label style="font-size:0.75rem; color:var(--text-amber);">ARTISTA:</label>
+            <input type="text" class="tui-input" id="tag-artist-input" readonly value="--">
+          </div>
+          <div>
+            <label style="font-size:0.75rem; color:var(--text-amber);">ÁLBUM:</label>
+            <input type="text" class="tui-input" id="tag-album-input" readonly value="--">
+          </div>
+          <div>
+            <label style="font-size:0.75rem; color:var(--text-amber);">AÑO:</label>
+            <input type="text" class="tui-input" id="tag-year-input" readonly value="--">
+          </div>
+          <div>
+            <label style="font-size:0.75rem; color:var(--text-amber);">GÉNERO:</label>
+            <input type="text" class="tui-input" id="tag-genre-input" readonly value="--">
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    /* ===================================================
+       CÓDIGO 19 - JAVASCRIPT & ENGINE DE AUDIO COMPLETO
+       =================================================== */
+
+    // Tab Navigation
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.tui-tab-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById(tabId).classList.remove('hidden');
+      event.currentTarget.classList.add('active');
+    }
+
+    // Audio Context Setup
+    let audioCtx = null;
+    let audioElement = new Audio();
+    let sourceNode = null;
+    let eqFilters = [];
+    let currentTrackIndex = -1;
+    let playlist = [];
+
+    // Frecuencias para ecualizador 8 bandas
+    const eqFrequencies = [60, 170, 310, 600, 1000, 3000, 6000, 12000];
+
+    function initAudioContext() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        sourceNode = audioCtx.createMediaElementSource(audioElement);
+
+        // Crear Filtros Biquad para Ecualizador
+        let previousNode = sourceNode;
+        eqFrequencies.forEach((freq, idx) => {
+          let filter = audioCtx.createBiquadFilter();
+          filter.type = idx === 0 ? 'lowshelf' : (idx === eqFrequencies.length - 1 ? 'highshelf' : 'peaking');
+          filter.frequency.value = freq;
+          filter.gain.value = 0;
+          previousNode.connect(filter);
+          previousNode = filter;
+          eqFilters.push(filter);
+        });
+
+        previousNode.connect(audioCtx.destination);
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    // Dom Elements
+    const fileInput = document.getElementById('file-input');
+    const playlistUl = document.getElementById('playlist-ul');
+    const playBtn = document.getElementById('play-btn');
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+    const stopBtn = document.getElementById('stop-btn');
+    const seekBar = document.getElementById('seek-bar');
+    const currentTimeEl = document.getElementById('current-time');
+    const durationTimeEl = document.getElementById('duration-time');
+    const volumeSlider = document.getElementById('volume-slider');
+    const volVal = document.getElementById('vol-val');
+    const speedSlider = document.getElementById('speed-slider');
+    const speedVal = document.getElementById('speed-val');
+
+    // Cargar Archivos
+    fileInput.addEventListener('change', (e) => {
+      const files = Array.from(e.target.files);
+      if (!files.length) return;
+
+      files.forEach(file => {
+        playlist.push({
+          file: file,
+          title: file.name.replace(/\.[^/.]+$/, ""),
+          artist: "Unknown Artist",
+          album: "Unknown Album",
+          year: "--",
+          genre: "--",
+          cover: null
+        });
+      });
+
+      renderPlaylist();
+      if (currentTrackIndex === -1) {
+        loadTrack(0);
+      }
+    });
+
+    function renderPlaylist() {
+      playlistUl.innerHTML = "";
+      playlist.forEach((track, index) => {
+        const li = document.createElement('li');
+        li.className = `tui-list-item ${index === currentTrackIndex ? 'active' : ''}`;
+        li.innerHTML = `<span>[${index + 1}] ${track.title}</span><span style="color:var(--text-dim);">${formatTime(audioElement.duration || 0)}</span>`;
+        li.onclick = () => loadTrack(index, true);
+        playlistUl.appendChild(li);
+      });
+    }
+
+    function loadTrack(index, autoPlay = false) {
+      if (index < 0 || index >= playlist.length) return;
+      currentTrackIndex = index;
+      initAudioContext();
+
+      const track = playlist[index];
+      const url = URL.createObjectURL(track.file);
+      audioElement.src = url;
+
+      document.getElementById('track-title').innerText = track.title;
+      document.getElementById('track-artist').innerText = track.artist;
+      document.getElementById('track-album').innerText = track.album;
+
+      // Extract Metadata via jsmediatags
+      if (window.jsmediatags) {
+        jsmediatags.read(track.file, {
+          onSuccess: function (tag) {
+            const tags = tag.tags;
+            track.title = tags.title || track.title;
+            track.artist = tags.artist || "Unknown Artist";
+            track.album = tags.album || "Unknown Album";
+            track.year = tags.year || "--";
+            track.genre = tags.genre || "--";
+
+            document.getElementById('track-title').innerText = track.title;
+            document.getElementById('track-artist').innerText = track.artist;
+            document.getElementById('track-album').innerText = track.album;
+
+            // ID3 Tab Inputs
+            document.getElementById('tag-title-input').value = track.title;
+            document.getElementById('tag-artist-input').value = track.artist;
+            document.getElementById('tag-album-input').value = track.album;
+            document.getElementById('tag-year-input').value = track.year;
+            document.getElementById('tag-genre-input').value = track.genre;
+
+            // Cover Art
+            if (tags.picture) {
+              const { data, format } = tags.picture;
+              let base64String = "";
+              for (let i = 0; i < data.length; i++) {
+                base64String += String.fromCharCode(data[i]);
+              }
+              const imgUrl = `data:${format};base64,${window.btoa(base64String)}`;
+              document.getElementById('cover-art').innerHTML = `<img src="${imgUrl}" alt="art">`;
+            } else {
+              document.getElementById('cover-art').innerHTML = `<span style="color: var(--text-dim); font-size:0.7rem;">[NO COVER]</span>`;
+            }
+            renderPlaylist();
+          },
+          onError: function (error) {
+            console.log("No ID3 Tags Found", error);
+          }
+        });
+      }
+
+      renderPlaylist();
+      if (autoPlay) {
+        audioElement.play();
+      }
+    }
+
+    // Audio Player Controls
+    playBtn.addEventListener('click', () => {
+      initAudioContext();
+      if (audioElement.paused) {
+        audioElement.play();
+      } else {
+        audioElement.pause();
+      }
+    });
+
+    stopBtn.addEventListener('click', () => {
+      audioElement.pause();
+      audioElement.currentTime = 0;
+    });
+
+    prevBtn.addEventListener('click', () => {
+      if (currentTrackIndex > 0) loadTrack(currentTrackIndex - 1, true);
+    });
+
+    nextBtn.addEventListener('click', () => {
+      if (currentTrackIndex < playlist.length - 1) loadTrack(currentTrackIndex + 1, true);
+    });
+
+    // Seek / Time Update
+    audioElement.addEventListener('timeupdate', () => {
+      if (!isNaN(audioElement.duration)) {
+        const progress = (audioElement.currentTime / audioElement.duration) * 100;
+        seekBar.value = progress;
+        currentTimeEl.innerText = formatTime(audioElement.currentTime);
+        durationTimeEl.innerText = formatTime(audioElement.duration);
+      }
+    });
+
+    seekBar.addEventListener('input', () => {
+      if (!isNaN(audioElement.duration)) {
+        audioElement.currentTime = (seekBar.value / 100) * audioElement.duration;
+      }
+    });
+
+    // Volume & Pitch
+    volumeSlider.addEventListener('input', (e) => {
+      audioElement.volume = e.target.value;
+      volVal.innerText = `${Math.round(e.target.value * 100)}%`;
+    });
+
+    speedSlider.addEventListener('input', (e) => {
+      audioElement.playbackRate = e.target.value;
+      speedVal.innerText = `${parseFloat(e.target.value).toFixed(2)}x`;
+    });
+
+    // Format Time Helper
+    function formatTime(seconds) {
+      const mins = Math.floor(seconds / 60);
+      const secs = Math.floor(seconds % 60);
+      return `${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
+    }
+
+    // Equalizer Controls
+    document.querySelectorAll('.eq-band').forEach(slider => {
+      slider.addEventListener('input', (e) => {
+        const bandIndex = parseInt(e.target.getAttribute('data-band'));
+        const gainValue = parseFloat(e.target.value);
+        if (eqFilters[bandIndex]) {
+          eqFilters[bandIndex].gain.value = gainValue;
+        }
+        e.target.nextElementSibling.innerText = `${gainValue > 0 ? '+' : ''}${gainValue}dB`;
+      });
+    });
+
+    document.getElementById('reset-eq-btn').addEventListener('click', () => {
+      document.querySelectorAll('.eq-band').forEach((slider, idx) => {
+        slider.value = 0;
+        if (eqFilters[idx]) eqFilters[idx].gain.value = 0;
+        slider.nextElementSibling.innerText = "0dB";
+      });
+    });
+
+    // Audio Trimmer Engine
+    const trimStart = document.getElementById('trim-start');
+    const trimEnd = document.getElementById('trim-end');
+
+    audioElement.addEventListener('loadedmetadata', () => {
+      trimStart.max = audioElement.duration;
+      trimEnd.max = audioElement.duration;
+      trimEnd.value = audioElement.duration;
+      document.getElementById('trim-start-val').innerText = `${0}s`;
+      document.getElementById('trim-end-val').innerText = `${Math.round(audioElement.duration)}s`;
+    });
+
+    trimStart.addEventListener('input', (e) => {
+      document.getElementById('trim-start-val').innerText = `${e.target.value}s`;
+    });
+
+    trimEnd.addEventListener('input', (e) => {
+      document.getElementById('trim-end-val').innerText = `${e.target.value}s`;
+    });
+
+    document.getElementById('preview-trim-btn').addEventListener('click', () => {
+      if (!audioElement.src) return;
+      audioElement.currentTime = parseFloat(trimStart.value);
+      audioElement.play();
+      const checkEnd = setInterval(() => {
+        if (audioElement.currentTime >= parseFloat(trimEnd.value)) {
+          audioElement.pause();
+          clearInterval(checkEnd);
+        }
+      }, 100);
+    });
+
+    // Voice Recorder Engine
+    let mediaRecorder = null;
+    let recordedChunks = [];
+    let recInterval = null;
+    let recSeconds = 0;
+
+    const startRecBtn = document.getElementById('start-rec-btn');
+    const stopRecBtn = document.getElementById('stop-rec-btn');
+
+    startRecBtn.addEventListener('click', async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        recordedChunks = [];
+
+        mediaRecorder.ondataavailable = e => {
+          if (e.data.size > 0) recordedChunks.push(e.data);
+        };
+
+        mediaRecorder.onstop = () => {
+          const blob = new Blob(recordedChunks, { type: 'audio/webm' });
+          const audioURL = URL.createObjectURL(blob);
+          document.getElementById('rec-audio-preview').src = audioURL;
+          document.getElementById('rec-result-container').classList.remove('hidden');
+        };
+
+        mediaRecorder.start();
+        startRecBtn.disabled = true;
+        stopRecBtn.disabled = false;
+        document.getElementById('rec-status').innerText = "[RECORDING...]";
+
+        recSeconds = 0;
+        recInterval = setInterval(() => {
+          recSeconds++;
+          document.getElementById('rec-timer').innerText = formatTime(recSeconds);
+        }, 1000);
+
+      } catch (err) {
+        alert("Error al acceder al micrófono: " + err);
+      }
+    });
+
+    stopRecBtn.addEventListener('click', () => {
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop();
+        clearInterval(recInterval);
+        startRecBtn.disabled = false;
+        stopRecBtn.disabled = true;
+        document.getElementById('rec-status').innerText = "[RECORDING STOPPED]";
+      }
+    });
+  </script>
+</body>
+
+</html>
