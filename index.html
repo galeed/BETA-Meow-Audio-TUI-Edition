@@ -608,24 +608,46 @@
     const speedVal = document.getElementById('speed-val');
 
     // Cargar Archivos de Audio con compatibilidad móvil absoluta (FileReader)
-    fileInput.addEventListener('change', (e) => {
-      const files = Array.from(e.target.files);
-      if (!files.length) return;
+    fileInput.addEventListener('change', async (e) => {
+      const files = Array.from(e.target.files || []);
+      if (files.length === 0) return;
 
-      files.forEach(file => {
-        playlist.push({
-          file: file,
-          title: file.name.replace(/\.[^/.]+$/, ""),
-          artist: "Desconocido",
-          album: "Desconocido",
-          year: "--",
-          genre: "--"
-        });
-      });
+      statusEl.textContent = "Cargando...";
 
-      renderPlaylist();
-      if (currentTrackIndex === -1) {
-        loadTrack(0);
+      try {
+        const newTracks = await Promise.all(files.map(async (file) => {
+          const ext = file.name.split('.').pop().toLowerCase();
+          const filename = file.name.replace(/\.[^/.]+$/, "");
+          
+          const metaPromise = readMetadata(file);
+          const specsPromise = parseBinaryAudioSpecs(file);
+
+          const [meta, specsText] = await Promise.all([metaPromise, specsPromise]);
+
+          return {
+            file,
+            filename,
+            ext,
+            title: meta?.title || filename,
+            artist: meta?.artist || "Biblioteca Local",
+            album: meta?.album || "",
+            cover: meta?.cover || DEFAULT_COVER,
+            specs: specsText
+          };
+        }));
+
+        playlist = [...playlist, ...newTracks];
+        statusEl.textContent = "";
+        
+        sortPlaylist();
+        renderPlaylistUI();
+
+        if (playlist.length === newTracks.length) {
+          currentIndex = 0;
+          processAndPlayTrack(currentIndex);
+        }
+      } catch (err) {
+        statusEl.textContent = "Error al cargar";
       }
     });
 
