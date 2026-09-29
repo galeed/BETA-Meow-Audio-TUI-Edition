@@ -29,23 +29,34 @@
       --font-mono: 'Fira Code', 'Courier New', Courier, monospace;
     }
 
+    /* Prevenir gestos de rebote y selección accidental en móviles */
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow-x: hidden;
+      overscroll-behavior-y: none;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
       font-family: var(--font-mono);
       -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
     }
 
     body {
       background-color: var(--bg);
       color: var(--text-main);
-      padding: 15px;
+      padding: 10px;
       min-height: 100vh;
       display: flex;
       justify-content: center;
       align-items: flex-start;
-      line-height: 1.4;
+      line-height: 1.3;
     }
 
     .tui-container {
@@ -53,67 +64,69 @@
       max-width: 900px;
       display: flex;
       flex-direction: column;
-      gap: 15px;
+      gap: 12px;
+      padding-bottom: 20px;
     }
 
     /* Terminal Box Styling */
     .tui-box {
       background: var(--panel-bg);
       border: 1px solid var(--text-main);
-      box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.8);
+      box-shadow: 3px 3px 0px rgba(0, 0, 0, 0.8);
       position: relative;
-      padding: 15px;
+      padding: 12px;
     }
 
     .tui-box-header {
       position: absolute;
-      top: -12px;
-      left: 12px;
+      top: -10px;
+      left: 10px;
       background: var(--bg);
-      padding: 0 8px;
+      padding: 0 6px;
       color: var(--text-amber);
       font-weight: bold;
-      font-size: 0.85rem;
+      font-size: 0.75rem;
       text-transform: uppercase;
     }
 
     .tui-header-main {
       border-color: var(--text-cyan);
       text-align: center;
-      padding: 20px;
+      padding: 14px 10px;
     }
 
     .tui-title {
       color: var(--text-cyan);
-      font-size: 1.4rem;
+      font-size: 1.1rem;
       font-weight: 700;
-      letter-spacing: 1px;
+      letter-spacing: 0.5px;
       text-shadow: 0 0 5px rgba(0, 240, 255, 0.4);
     }
 
     .tui-subtitle {
       color: var(--text-dim);
-      font-size: 0.8rem;
-      margin-top: 5px;
+      font-size: 0.7rem;
+      margin-top: 3px;
     }
 
     /* Navigation / Tabs style TUI */
     .tui-tabs {
       display: flex;
-      gap: 10px;
+      gap: 6px;
       flex-wrap: wrap;
-      margin-bottom: 10px;
     }
 
     .tui-tab-btn {
+      flex: 1 1 auto;
       background: var(--bg);
       color: var(--text-dim);
       border: 1px solid var(--border-color);
-      padding: 8px 12px;
+      padding: 8px 6px;
       cursor: pointer;
-      font-size: 0.85rem;
+      font-size: 0.75rem;
       font-weight: 600;
-      transition: all 0.2s ease;
+      text-align: center;
+      transition: all 0.15s ease;
     }
 
     .tui-tab-btn:hover,
@@ -124,18 +137,18 @@
       box-shadow: 2px 2px 0px var(--text-accent);
     }
 
-    /* Track Cover Art / ASCII Display */
+    /* Track Cover Art / Display */
     .player-display {
       display: flex;
-      gap: 15px;
-      flex-wrap: wrap;
+      gap: 12px;
       align-items: center;
-      margin-bottom: 15px;
+      margin-bottom: 10px;
     }
 
     .album-art-container {
-      width: 110px;
-      height: 110px;
+      width: 75px;
+      height: 75px;
+      min-width: 75px;
       border: 1px dashed var(--text-amber);
       display: flex;
       align-items: center;
@@ -152,19 +165,24 @@
 
     .track-info-details {
       flex: 1;
-      min-width: 200px;
+      overflow: hidden;
     }
 
     .track-title-text {
       color: var(--text-amber);
-      font-size: 1.1rem;
+      font-size: 0.95rem;
       font-weight: bold;
-      word-break: break-all;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .track-artist-text {
       color: var(--text-main);
-      font-size: 0.9rem;
+      font-size: 0.8rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     /* Standard Controls & Buttons */
@@ -172,21 +190,20 @@
       background: var(--bg);
       color: var(--text-main);
       border: 1px solid var(--text-main);
-      padding: 8px 14px;
-      font-size: 0.85rem;
+      padding: 10px 12px;
+      font-size: 0.8rem;
       font-weight: 600;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 6px;
-      transition: all 0.15s ease;
+      gap: 4px;
+      transition: all 0.1s ease;
+      touch-action: manipulation;
     }
 
-    .tui-btn:hover {
-      background: var(--text-main);
-      color: var(--bg);
-      box-shadow: 2px 2px 0px var(--text-amber);
+    .tui-btn:active {
+      transform: translateY(1px);
     }
 
     .tui-btn-accent {
@@ -194,59 +211,54 @@
       color: var(--text-accent);
     }
 
-    .tui-btn-accent:hover {
-      background: var(--text-accent);
-      color: #fff;
-      box-shadow: 2px 2px 0px var(--text-cyan);
-    }
-
     .tui-btn-amber {
       border-color: var(--text-amber);
       color: var(--text-amber);
     }
 
-    .tui-btn-amber:hover {
-      background: var(--text-amber);
-      color: var(--bg);
-      box-shadow: 2px 2px 0px var(--text-main);
+    .controls-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-top: 8px;
     }
 
-    .controls-grid {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-top: 10px;
+    @media (min-width: 480px) {
+      .controls-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
     }
 
     /* Sliders / Ranges */
     .tui-slider-group {
       display: flex;
       flex-direction: column;
-      gap: 5px;
-      margin-bottom: 10px;
+      gap: 4px;
+      margin-bottom: 8px;
       width: 100%;
     }
 
     .tui-slider-label {
       display: flex;
       justify-content: space-between;
-      font-size: 0.8rem;
+      font-size: 0.75rem;
       color: var(--text-amber);
     }
 
     input[type="range"] {
       -webkit-appearance: none;
       width: 100%;
-      height: 8px;
+      height: 16px;
       background: var(--bg);
       border: 1px solid var(--text-dim);
       outline: none;
+      touch-action: pan-x;
     }
 
     input[type="range"]::-webkit-slider-thumb {
       -webkit-appearance: none;
-      width: 14px;
-      height: 14px;
+      width: 16px;
+      height: 16px;
       background: var(--text-main);
       cursor: pointer;
       border: 1px solid var(--bg);
@@ -257,23 +269,23 @@
       list-style: none;
       display: flex;
       flex-direction: column;
-      gap: 6px;
-      max-height: 250px;
+      gap: 4px;
+      max-height: 180px;
       overflow-y: auto;
+      touch-action: pan-y;
     }
 
     .tui-list-item {
       background: var(--bg);
       border: 1px solid var(--border-color);
-      padding: 8px 12px;
+      padding: 8px 10px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 0.85rem;
+      font-size: 0.75rem;
       cursor: pointer;
     }
 
-    .tui-list-item:hover,
     .tui-list-item.active {
       border-color: var(--text-amber);
       background: var(--highlight);
@@ -285,39 +297,42 @@
       background: var(--bg);
       color: var(--text-main);
       border: 1px solid var(--text-main);
-      padding: 8px 10px;
-      font-size: 0.85rem;
+      padding: 8px;
+      font-size: 0.8rem;
       outline: none;
       width: 100%;
-    }
-
-    .tui-input:focus, select:focus {
-      border-color: var(--text-accent);
-      box-shadow: 0 0 5px rgba(255, 0, 127, 0.5);
+      -webkit-user-select: text;
+      user-select: text;
     }
 
     /* Equalizer Sliders layout */
     .eq-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+      grid-template-columns: repeat(4, 1fr);
       gap: 10px;
-      align-items: flex-end;
-      text-align: center;
-      margin-top: 10px;
+      align-items: center;
+      margin-top: 8px;
+    }
+
+    @media (min-width: 600px) {
+      .eq-grid {
+        grid-template-columns: repeat(8, 1fr);
+      }
     }
 
     .eq-slider-vertical {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 8px;
+      gap: 4px;
+      background: var(--bg);
+      padding: 6px 2px;
+      border: 1px solid var(--border-color);
     }
 
     .eq-slider-vertical input[type="range"] {
-      writing-mode: bt-lr;
-      -webkit-appearance: slider-vertical;
-      width: 12px;
-      height: 100px;
+      width: 100%;
+      height: 14px;
     }
 
     /* Utilities */
@@ -325,19 +340,14 @@
       display: none !important;
     }
 
-    /* Custom Scrollbar */
     ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
+      width: 4px;
     }
     ::-webkit-scrollbar-track {
       background: var(--bg);
     }
     ::-webkit-scrollbar-thumb {
-      background: var(--border-color);
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: var(--text-main);
+      background: var(--text-dim);
     }
   </style>
 </head>
@@ -348,17 +358,17 @@
 
     <!-- Title Box -->
     <div class="tui-box tui-header-main">
-      <div class="tui-title">[ MEOW AUDIO APP :: TUI EDITION ]</div>
-      <div class="tui-subtitle">Sistema de Procesamiento y Reproducción de Audio v19.0</div>
+      <div class="tui-title">[ MEOW AUDIO APP :: TUI ]</div>
+      <div class="tui-subtitle">Sistema Audio v19.1 Mobile Fixed</div>
     </div>
 
     <!-- Navigation Bar -->
     <div class="tui-tabs">
-      <button class="tui-tab-btn active" onclick="switchTab('player-tab')">[1] Player</button>
-      <button class="tui-tab-btn" onclick="switchTab('eq-tab')">[2] Equalizer</button>
-      <button class="tui-tab-btn" onclick="switchTab('trim-tab')">[3] Trim & Edit</button>
-      <button class="tui-tab-btn" onclick="switchTab('recorder-tab')">[4] Recorder</button>
-      <button class="tui-tab-btn" onclick="switchTab('tags-tab')">[5] ID3 Tags</button>
+      <button class="tui-tab-btn active" onclick="switchTab('player-tab', this)">[1] Player</button>
+      <button class="tui-tab-btn" onclick="switchTab('eq-tab', this)">[2] EQ</button>
+      <button class="tui-tab-btn" onclick="switchTab('trim-tab', this)">[3] Trim</button>
+      <button class="tui-tab-btn" onclick="switchTab('recorder-tab', this)">[4] Rec</button>
+      <button class="tui-tab-btn" onclick="switchTab('tags-tab', this)">[5] Tags</button>
     </div>
 
     <!-- TAB 1: PLAYER & PLAYLIST -->
@@ -368,12 +378,12 @@
 
         <div class="player-display">
           <div class="album-art-container" id="cover-art">
-            <span style="color: var(--text-dim); font-size:0.7rem;">[NO COVER]</span>
+            <span style="color: var(--text-dim); font-size:0.6rem;">[NO ART]</span>
           </div>
           <div class="track-info-details">
-            <div class="track-title-text" id="track-title">Sin archivo seleccionado</div>
+            <div class="track-title-text" id="track-title">Sin archivo</div>
             <div class="track-artist-text" id="track-artist">--</div>
-            <div style="font-size:0.75rem; color:var(--text-dim); margin-top:5px;" id="track-album">--</div>
+            <div style="font-size:0.7rem; color:var(--text-dim); margin-top:2px;" id="track-album">--</div>
           </div>
         </div>
 
@@ -389,16 +399,16 @@
         <!-- Player Controls -->
         <div class="controls-grid">
           <button class="tui-btn" id="prev-btn">&lt;&lt; Prev</button>
-          <button class="tui-btn tui-btn-amber" id="play-btn">Play / Pause</button>
+          <button class="tui-btn tui-btn-amber" id="play-btn">Play/Pause</button>
           <button class="tui-btn" id="next-btn">Next &gt;&gt;</button>
           <button class="tui-btn tui-btn-accent" id="stop-btn">Stop</button>
         </div>
 
         <!-- Volume & Pitch Controls -->
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-top:15px;">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px;">
           <div class="tui-slider-group">
             <div class="tui-slider-label">
-              <span>Volume</span>
+              <span>Vol</span>
               <span id="vol-val">100%</span>
             </div>
             <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="1">
@@ -406,7 +416,7 @@
 
           <div class="tui-slider-group">
             <div class="tui-slider-label">
-              <span>Speed / Pitch</span>
+              <span>Speed</span>
               <span id="speed-val">1.0x</span>
             </div>
             <input type="range" id="speed-slider" min="0.5" max="2" step="0.05" value="1">
@@ -414,19 +424,19 @@
         </div>
 
         <!-- File Loader -->
-        <div style="margin-top:15px;">
+        <div style="margin-top:10px;">
           <label class="tui-btn tui-btn-amber" style="width:100%; text-align:center; cursor:pointer;">
-            + Cargar Archivos de Audio
+            + Seleccionar Audio
             <input type="file" id="file-input" multiple accept="audio/*" style="display:none;">
           </label>
         </div>
       </div>
 
       <!-- Playlist Box -->
-      <div class="tui-box" style="margin-top:15px;">
+      <div class="tui-box" style="margin-top:12px;">
         <div class="tui-box-header">Playlist</div>
         <ul class="tui-list" id="playlist-ul">
-          <li class="tui-list-item" style="color:var(--text-dim);">Lista vacía. Cargue pistas para comenzar.</li>
+          <li class="tui-list-item" style="color:var(--text-dim);">Lista vacía. Carga archivos.</li>
         </ul>
       </div>
     </div>
@@ -434,53 +444,53 @@
     <!-- TAB 2: EQUALIZER -->
     <div id="eq-tab" class="tab-content hidden">
       <div class="tui-box">
-        <div class="tui-box-header">Graphic Equalizer</div>
-        <p style="font-size:0.8rem; color:var(--text-dim); margin-bottom:10px;">Ajusta las frecuencias en tiempo real:</p>
+        <div class="tui-box-header">Ecualizador</div>
+        <p style="font-size:0.75rem; color:var(--text-dim); margin-bottom:8px;">Ajusta las frecuencias:</p>
 
         <div class="eq-grid">
           <div class="eq-slider-vertical">
-            <span style="font-size:0.7rem;">60Hz</span>
+            <span style="font-size:0.65rem;">60Hz</span>
             <input type="range" class="eq-band" data-band="0" min="-12" max="12" value="0" step="0.5">
-            <span class="eq-val" style="font-size:0.7rem;">0dB</span>
+            <span class="eq-val" style="font-size:0.65rem;">0dB</span>
           </div>
           <div class="eq-slider-vertical">
-            <span style="font-size:0.7rem;">170Hz</span>
+            <span style="font-size:0.65rem;">170Hz</span>
             <input type="range" class="eq-band" data-band="1" min="-12" max="12" value="0" step="0.5">
-            <span class="eq-val" style="font-size:0.7rem;">0dB</span>
+            <span class="eq-val" style="font-size:0.65rem;">0dB</span>
           </div>
           <div class="eq-slider-vertical">
-            <span style="font-size:0.7rem;">310Hz</span>
+            <span style="font-size:0.65rem;">310Hz</span>
             <input type="range" class="eq-band" data-band="2" min="-12" max="12" value="0" step="0.5">
-            <span class="eq-val" style="font-size:0.7rem;">0dB</span>
+            <span class="eq-val" style="font-size:0.65rem;">0dB</span>
           </div>
           <div class="eq-slider-vertical">
-            <span style="font-size:0.7rem;">600Hz</span>
+            <span style="font-size:0.65rem;">600Hz</span>
             <input type="range" class="eq-band" data-band="3" min="-12" max="12" value="0" step="0.5">
-            <span class="eq-val" style="font-size:0.7rem;">0dB</span>
+            <span class="eq-val" style="font-size:0.65rem;">0dB</span>
           </div>
           <div class="eq-slider-vertical">
-            <span style="font-size:0.7rem;">1kHz</span>
+            <span style="font-size:0.65rem;">1kHz</span>
             <input type="range" class="eq-band" data-band="4" min="-12" max="12" value="0" step="0.5">
-            <span class="eq-val" style="font-size:0.7rem;">0dB</span>
+            <span class="eq-val" style="font-size:0.65rem;">0dB</span>
           </div>
           <div class="eq-slider-vertical">
-            <span style="font-size:0.7rem;">3kHz</span>
+            <span style="font-size:0.65rem;">3kHz</span>
             <input type="range" class="eq-band" data-band="5" min="-12" max="12" value="0" step="0.5">
-            <span class="eq-val" style="font-size:0.7rem;">0dB</span>
+            <span class="eq-val" style="font-size:0.65rem;">0dB</span>
           </div>
           <div class="eq-slider-vertical">
-            <span style="font-size:0.7rem;">6kHz</span>
+            <span style="font-size:0.65rem;">6kHz</span>
             <input type="range" class="eq-band" data-band="6" min="-12" max="12" value="0" step="0.5">
-            <span class="eq-val" style="font-size:0.7rem;">0dB</span>
+            <span class="eq-val" style="font-size:0.65rem;">0dB</span>
           </div>
           <div class="eq-slider-vertical">
-            <span style="font-size:0.7rem;">12kHz</span>
+            <span style="font-size:0.65rem;">12kHz</span>
             <input type="range" class="eq-band" data-band="7" min="-12" max="12" value="0" step="0.5">
-            <span class="eq-val" style="font-size:0.7rem;">0dB</span>
+            <span class="eq-val" style="font-size:0.65rem;">0dB</span>
           </div>
         </div>
 
-        <div style="margin-top:15px; text-align:right;">
+        <div style="margin-top:12px; text-align:right;">
           <button class="tui-btn tui-btn-accent" id="reset-eq-btn">Reset EQ</button>
         </div>
       </div>
@@ -489,12 +499,12 @@
     <!-- TAB 3: AUDIO TRIMMER -->
     <div id="trim-tab" class="tab-content hidden">
       <div class="tui-box">
-        <div class="tui-box-header">Audio Trimmer / Clipper</div>
-        <p style="font-size:0.8rem; color:var(--text-dim); margin-bottom:15px;">Selecciona el rango de tiempo a recortar de la pista activa:</p>
+        <div class="tui-box-header">Recortador</div>
+        <p style="font-size:0.75rem; color:var(--text-dim); margin-bottom:10px;">Selecciona el rango a reproducir/recortar:</p>
 
         <div class="tui-slider-group">
           <div class="tui-slider-label">
-            <span>Start Time (seg)</span>
+            <span>Inicio (seg)</span>
             <span id="trim-start-val">0s</span>
           </div>
           <input type="range" id="trim-start" min="0" max="100" value="0" step="0.1">
@@ -502,15 +512,14 @@
 
         <div class="tui-slider-group">
           <div class="tui-slider-label">
-            <span>End Time (seg)</span>
+            <span>Fin (seg)</span>
             <span id="trim-end-val">0s</span>
           </div>
           <input type="range" id="trim-end" min="0" max="100" value="100" step="0.1">
         </div>
 
-        <div class="controls-grid" style="margin-top:15px;">
-          <button class="tui-btn tui-btn-amber" id="preview-trim-btn">Preview Cut</button>
-          <button class="tui-btn tui-btn-accent" id="export-trim-btn">Export Cut Audio</button>
+        <div class="controls-grid" style="margin-top:10px;">
+          <button class="tui-btn tui-btn-amber" id="preview-trim-btn">Probar Corte</button>
         </div>
       </div>
     </div>
@@ -518,22 +527,22 @@
     <!-- TAB 4: RECORDER -->
     <div id="recorder-tab" class="tab-content hidden">
       <div class="tui-box">
-        <div class="tui-box-header">Voice / Audio Recorder</div>
-        <p style="font-size:0.8rem; color:var(--text-dim); margin-bottom:15px;">Graba audio directo desde tu micrófono:</p>
+        <div class="tui-box-header">Grabadora de Voz</div>
+        <p style="font-size:0.75rem; color:var(--text-dim); margin-bottom:10px;">Graba audio directo del micrófono:</p>
 
-        <div style="text-align:center; padding:15px; border:1px dashed var(--border-color); margin-bottom:15px;">
-          <div id="rec-status" style="color:var(--text-amber); font-size:1.1rem; font-weight:bold;">[READY TO RECORD]</div>
-          <div id="rec-timer" style="color:var(--text-cyan); font-size:1.5rem; margin-top:5px;">00:00</div>
+        <div style="text-align:center; padding:12px; border:1px dashed var(--border-color); margin-bottom:10px;">
+          <div id="rec-status" style="color:var(--text-amber); font-size:0.9rem; font-weight:bold;">[LISTO PARA GRABAR]</div>
+          <div id="rec-timer" style="color:var(--text-cyan); font-size:1.3rem; margin-top:4px;">00:00</div>
         </div>
 
         <div class="controls-grid">
-          <button class="tui-btn tui-btn-accent" id="start-rec-btn">● Record</button>
-          <button class="tui-btn" id="stop-rec-btn" disabled>■ Stop</button>
+          <button class="tui-btn tui-btn-accent" id="start-rec-btn">● Grabar</button>
+          <button class="tui-btn" id="stop-rec-btn" disabled>■ Detener</button>
         </div>
 
-        <div id="rec-result-container" style="margin-top:15px;" class="hidden">
-          <p style="font-size:0.8rem; color:var(--text-amber); margin-bottom:5px;">Grabación finalizada:</p>
-          <audio id="rec-audio-preview" controls style="width:100%; filter:invert(0.9);"></audio>
+        <div id="rec-result-container" style="margin-top:12px;" class="hidden">
+          <p style="font-size:0.75rem; color:var(--text-amber); margin-bottom:4px;">Resultado de Grabación:</p>
+          <audio id="rec-audio-preview" controls style="width:100%; height:40px;"></audio>
         </div>
       </div>
     </div>
@@ -541,28 +550,28 @@
     <!-- TAB 5: ID3 TAGS -->
     <div id="tags-tab" class="tab-content hidden">
       <div class="tui-box">
-        <div class="tui-box-header">ID3 Metadata Inspector</div>
-        <p style="font-size:0.8rem; color:var(--text-dim); margin-bottom:15px;">Metadatos extraídos de la pista actual:</p>
+        <div class="tui-box-header">Inspector ID3</div>
+        <p style="font-size:0.75rem; color:var(--text-dim); margin-bottom:10px;">Metadatos extraídos de la pista actual:</p>
 
-        <div style="display:flex; flex-direction:column; gap:10px;">
+        <div style="display:flex; flex-direction:column; gap:8px;">
           <div>
-            <label style="font-size:0.75rem; color:var(--text-amber);">TÍTULO:</label>
+            <label style="font-size:0.7rem; color:var(--text-amber);">TÍTULO:</label>
             <input type="text" class="tui-input" id="tag-title-input" readonly value="--">
           </div>
           <div>
-            <label style="font-size:0.75rem; color:var(--text-amber);">ARTISTA:</label>
+            <label style="font-size:0.7rem; color:var(--text-amber);">ARTISTA:</label>
             <input type="text" class="tui-input" id="tag-artist-input" readonly value="--">
           </div>
           <div>
-            <label style="font-size:0.75rem; color:var(--text-amber);">ÁLBUM:</label>
+            <label style="font-size:0.7rem; color:var(--text-amber);">ÁLBUM:</label>
             <input type="text" class="tui-input" id="tag-album-input" readonly value="--">
           </div>
           <div>
-            <label style="font-size:0.75rem; color:var(--text-amber);">AÑO:</label>
+            <label style="font-size:0.7rem; color:var(--text-amber);">AÑO:</label>
             <input type="text" class="tui-input" id="tag-year-input" readonly value="--">
           </div>
           <div>
-            <label style="font-size:0.75rem; color:var(--text-amber);">GÉNERO:</label>
+            <label style="font-size:0.7rem; color:var(--text-amber);">GÉNERO:</label>
             <input type="text" class="tui-input" id="tag-genre-input" readonly value="--">
           </div>
         </div>
@@ -572,27 +581,23 @@
   </div>
 
   <script>
-    /* ===================================================
-       CÓDIGO 19 - JAVASCRIPT & ENGINE DE AUDIO COMPLETO
-       =================================================== */
-
     // Tab Navigation
-    function switchTab(tabId) {
+    function switchTab(tabId, btn) {
       document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
       document.querySelectorAll('.tui-tab-btn').forEach(el => el.classList.remove('active'));
       document.getElementById(tabId).classList.remove('hidden');
-      event.currentTarget.classList.add('active');
+      if (btn) btn.classList.add('active');
     }
 
-    // Audio Context Setup
+    // Audio Engine Setup
     let audioCtx = null;
     let audioElement = new Audio();
+    audioElement.crossOrigin = "anonymous";
     let sourceNode = null;
     let eqFilters = [];
     let currentTrackIndex = -1;
     let playlist = [];
 
-    // Frecuencias para ecualizador 8 bandas
     const eqFrequencies = [60, 170, 310, 600, 1000, 3000, 6000, 12000];
 
     function initAudioContext() {
@@ -600,7 +605,6 @@
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         sourceNode = audioCtx.createMediaElementSource(audioElement);
 
-        // Crear Filtros Biquad para Ecualizador
         let previousNode = sourceNode;
         eqFrequencies.forEach((freq, idx) => {
           let filter = audioCtx.createBiquadFilter();
@@ -619,7 +623,7 @@
       }
     }
 
-    // Dom Elements
+    // Elements
     const fileInput = document.getElementById('file-input');
     const playlistUl = document.getElementById('playlist-ul');
     const playBtn = document.getElementById('play-btn');
@@ -634,7 +638,7 @@
     const speedSlider = document.getElementById('speed-slider');
     const speedVal = document.getElementById('speed-val');
 
-    // Cargar Archivos
+    // Cargar Archivos de Audio
     fileInput.addEventListener('change', (e) => {
       const files = Array.from(e.target.files);
       if (!files.length) return;
@@ -643,11 +647,10 @@
         playlist.push({
           file: file,
           title: file.name.replace(/\.[^/.]+$/, ""),
-          artist: "Unknown Artist",
-          album: "Unknown Album",
+          artist: "Desconocido",
+          album: "Desconocido",
           year: "--",
-          genre: "--",
-          cover: null
+          genre: "--"
         });
       });
 
@@ -662,7 +665,7 @@
       playlist.forEach((track, index) => {
         const li = document.createElement('li');
         li.className = `tui-list-item ${index === currentTrackIndex ? 'active' : ''}`;
-        li.innerHTML = `<span>[${index + 1}] ${track.title}</span><span style="color:var(--text-dim);">${formatTime(audioElement.duration || 0)}</span>`;
+        li.innerHTML = `<span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">[${index + 1}] ${track.title}</span>`;
         li.onclick = () => loadTrack(index, true);
         playlistUl.appendChild(li);
       });
@@ -681,14 +684,14 @@
       document.getElementById('track-artist').innerText = track.artist;
       document.getElementById('track-album').innerText = track.album;
 
-      // Extract Metadata via jsmediatags
+      // Lectura de etiquetas ID3
       if (window.jsmediatags) {
         jsmediatags.read(track.file, {
           onSuccess: function (tag) {
             const tags = tag.tags;
             track.title = tags.title || track.title;
-            track.artist = tags.artist || "Unknown Artist";
-            track.album = tags.album || "Unknown Album";
+            track.artist = tags.artist || "Desconocido";
+            track.album = tags.album || "Desconocido";
             track.year = tags.year || "--";
             track.genre = tags.genre || "--";
 
@@ -696,14 +699,12 @@
             document.getElementById('track-artist').innerText = track.artist;
             document.getElementById('track-album').innerText = track.album;
 
-            // ID3 Tab Inputs
             document.getElementById('tag-title-input').value = track.title;
             document.getElementById('tag-artist-input').value = track.artist;
             document.getElementById('tag-album-input').value = track.album;
             document.getElementById('tag-year-input').value = track.year;
             document.getElementById('tag-genre-input').value = track.genre;
 
-            // Cover Art
             if (tags.picture) {
               const { data, format } = tags.picture;
               let base64String = "";
@@ -713,25 +714,26 @@
               const imgUrl = `data:${format};base64,${window.btoa(base64String)}`;
               document.getElementById('cover-art').innerHTML = `<img src="${imgUrl}" alt="art">`;
             } else {
-              document.getElementById('cover-art').innerHTML = `<span style="color: var(--text-dim); font-size:0.7rem;">[NO COVER]</span>`;
+              document.getElementById('cover-art').innerHTML = `<span style="color: var(--text-dim); font-size:0.6rem;">[NO ART]</span>`;
             }
             renderPlaylist();
           },
-          onError: function (error) {
-            console.log("No ID3 Tags Found", error);
+          onError: function () {
+            document.getElementById('cover-art').innerHTML = `<span style="color: var(--text-dim); font-size:0.6rem;">[NO ART]</span>`;
           }
         });
       }
 
       renderPlaylist();
       if (autoPlay) {
-        audioElement.play();
+        audioElement.play().catch(() => {});
       }
     }
 
-    // Audio Player Controls
+    // Controles de Reproducción
     playBtn.addEventListener('click', () => {
       initAudioContext();
+      if (!audioElement.src) return;
       if (audioElement.paused) {
         audioElement.play();
       } else {
@@ -752,9 +754,8 @@
       if (currentTrackIndex < playlist.length - 1) loadTrack(currentTrackIndex + 1, true);
     });
 
-    // Seek / Time Update
     audioElement.addEventListener('timeupdate', () => {
-      if (!isNaN(audioElement.duration)) {
+      if (!isNaN(audioElement.duration) && audioElement.duration > 0) {
         const progress = (audioElement.currentTime / audioElement.duration) * 100;
         seekBar.value = progress;
         currentTimeEl.innerText = formatTime(audioElement.currentTime);
@@ -763,12 +764,11 @@
     });
 
     seekBar.addEventListener('input', () => {
-      if (!isNaN(audioElement.duration)) {
+      if (!isNaN(audioElement.duration) && audioElement.duration > 0) {
         audioElement.currentTime = (seekBar.value / 100) * audioElement.duration;
       }
     });
 
-    // Volume & Pitch
     volumeSlider.addEventListener('input', (e) => {
       audioElement.volume = e.target.value;
       volVal.innerText = `${Math.round(e.target.value * 100)}%`;
@@ -779,14 +779,13 @@
       speedVal.innerText = `${parseFloat(e.target.value).toFixed(2)}x`;
     });
 
-    // Format Time Helper
     function formatTime(seconds) {
       const mins = Math.floor(seconds / 60);
       const secs = Math.floor(seconds % 60);
       return `${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
     }
 
-    // Equalizer Controls
+    // Controles de Ecualización
     document.querySelectorAll('.eq-band').forEach(slider => {
       slider.addEventListener('input', (e) => {
         const bandIndex = parseInt(e.target.getAttribute('data-band'));
@@ -814,7 +813,7 @@
       trimStart.max = audioElement.duration;
       trimEnd.max = audioElement.duration;
       trimEnd.value = audioElement.duration;
-      document.getElementById('trim-start-val').innerText = `${0}s`;
+      document.getElementById('trim-start-val').innerText = `0s`;
       document.getElementById('trim-end-val').innerText = `${Math.round(audioElement.duration)}s`;
     });
 
@@ -838,19 +837,20 @@
       }, 100);
     });
 
-    // Voice Recorder Engine
+    // Grabadora de Audio
     let mediaRecorder = null;
     let recordedChunks = [];
     let recInterval = null;
     let recSeconds = 0;
+    let mediaStream = null;
 
     const startRecBtn = document.getElementById('start-rec-btn');
     const stopRecBtn = document.getElementById('stop-rec-btn');
 
     startRecBtn.addEventListener('click', async () => {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        mediaRecorder = new MediaRecorder(stream);
+        mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(mediaStream);
         recordedChunks = [];
 
         mediaRecorder.ondataavailable = e => {
@@ -860,14 +860,19 @@
         mediaRecorder.onstop = () => {
           const blob = new Blob(recordedChunks, { type: 'audio/webm' });
           const audioURL = URL.createObjectURL(blob);
-          document.getElementById('rec-audio-preview').src = audioURL;
+          const recAudioPreview = document.getElementById('rec-audio-preview');
+          recAudioPreview.src = audioURL;
           document.getElementById('rec-result-container').classList.remove('hidden');
+
+          if (mediaStream) {
+            mediaStream.getTracks().forEach(track => track.stop());
+          }
         };
 
-        mediaRecorder.start();
+        mediaRecorder.start(100);
         startRecBtn.disabled = true;
         stopRecBtn.disabled = false;
-        document.getElementById('rec-status').innerText = "[RECORDING...]";
+        document.getElementById('rec-status').innerText = "[GRABANDO...]";
 
         recSeconds = 0;
         recInterval = setInterval(() => {
@@ -876,7 +881,7 @@
         }, 1000);
 
       } catch (err) {
-        alert("Error al acceder al micrófono: " + err);
+        alert("Permiso de micrófono denegado o no disponible.");
       }
     });
 
@@ -886,7 +891,7 @@
         clearInterval(recInterval);
         startRecBtn.disabled = false;
         stopRecBtn.disabled = true;
-        document.getElementById('rec-status').innerText = "[RECORDING STOPPED]";
+        document.getElementById('rec-status').innerText = "[GRABACIÓN FINALIZADA]";
       }
     });
   </script>
