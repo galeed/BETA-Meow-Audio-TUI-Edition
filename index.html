@@ -6,10 +6,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
-
   <title>MEOW AUDIO APP - TUI EDITION</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.min.js"></script>
 
@@ -29,7 +25,6 @@
       --font-mono: 'Fira Code', 'Courier New', Courier, monospace;
     }
 
-    /* Prevenir gestos de rebote y selección accidental en móviles */
     html, body {
       width: 100%;
       height: 100%;
@@ -68,7 +63,6 @@
       padding-bottom: 20px;
     }
 
-    /* Terminal Box Styling */
     .tui-box {
       background: var(--panel-bg);
       border: 1px solid var(--text-main);
@@ -109,7 +103,6 @@
       margin-top: 3px;
     }
 
-    /* Navigation / Tabs style TUI */
     .tui-tabs {
       display: flex;
       gap: 6px;
@@ -137,19 +130,23 @@
       box-shadow: 2px 2px 0px var(--text-accent);
     }
 
-    /* Track Cover Art / Display */
+    /* Modificaciones en la visualización del reproductor y portada */
     .player-display {
       display: flex;
-      gap: 12px;
+      flex-direction: column; /* Centrado vertical */
+      gap: 15px;
       align-items: center;
-      margin-bottom: 10px;
+      text-align: center;
+      margin-bottom: 15px;
+      margin-top: 10px;
     }
 
     .album-art-container {
-      width: 75px;
-      height: 75px;
-      min-width: 75px;
+      width: 250px;
+      height: 250px;
+      min-width: 250px;
       border: 1px dashed var(--text-amber);
+      border-radius: 0; /* Sin bordes redondeados */
       display: flex;
       align-items: center;
       justify-content: center;
@@ -164,13 +161,13 @@
     }
 
     .track-info-details {
-      flex: 1;
+      width: 100%;
       overflow: hidden;
     }
 
     .track-title-text {
       color: var(--text-amber);
-      font-size: 0.95rem;
+      font-size: 1.1rem;
       font-weight: bold;
       white-space: nowrap;
       overflow: hidden;
@@ -179,13 +176,13 @@
 
     .track-artist-text {
       color: var(--text-main);
-      font-size: 0.8rem;
+      font-size: 0.9rem;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      margin-top: 4px;
     }
 
-    /* Standard Controls & Buttons */
     .tui-btn {
       background: var(--bg);
       color: var(--text-main);
@@ -206,15 +203,8 @@
       transform: translateY(1px);
     }
 
-    .tui-btn-accent {
-      border-color: var(--text-accent);
-      color: var(--text-accent);
-    }
-
-    .tui-btn-amber {
-      border-color: var(--text-amber);
-      color: var(--text-amber);
-    }
+    .tui-btn-accent { border-color: var(--text-accent); color: var(--text-accent); }
+    .tui-btn-amber { border-color: var(--text-amber); color: var(--text-amber); }
 
     .controls-grid {
       display: grid;
@@ -229,7 +219,6 @@
       }
     }
 
-    /* Sliders / Ranges */
     .tui-slider-group {
       display: flex;
       flex-direction: column;
@@ -264,7 +253,6 @@
       border: 1px solid var(--bg);
     }
 
-    /* Lists / Playlist */
     .tui-list {
       list-style: none;
       display: flex;
@@ -292,7 +280,6 @@
       color: var(--text-amber);
     }
 
-    /* Inputs */
     .tui-input, select {
       background: var(--bg);
       color: var(--text-main);
@@ -305,7 +292,6 @@
       user-select: text;
     }
 
-    /* Equalizer Sliders layout */
     .eq-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -335,20 +321,11 @@
       height: 14px;
     }
 
-    /* Utilities */
-    .hidden {
-      display: none !important;
-    }
+    .hidden { display: none !important; }
 
-    ::-webkit-scrollbar {
-      width: 4px;
-    }
-    ::-webkit-scrollbar-track {
-      background: var(--bg);
-    }
-    ::-webkit-scrollbar-thumb {
-      background: var(--text-dim);
-    }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--text-dim); }
   </style>
 </head>
 
@@ -356,13 +333,11 @@
 
   <div class="tui-container">
 
-    <!-- Title Box -->
     <div class="tui-box tui-header-main">
       <div class="tui-title">[ MEOW AUDIO APP :: TUI ]</div>
-      <div class="tui-subtitle">Sistema Audio v19.1 Mobile Fixed</div>
+      <div class="tui-subtitle">Sistema Audio v19.2 Mobile Fixed</div>
     </div>
 
-    <!-- Navigation Bar -->
     <div class="tui-tabs">
       <button class="tui-tab-btn active" onclick="switchTab('player-tab', this)">[1] Player</button>
       <button class="tui-tab-btn" onclick="switchTab('eq-tab', this)">[2] EQ</button>
@@ -378,16 +353,15 @@
 
         <div class="player-display">
           <div class="album-art-container" id="cover-art">
-            <span style="color: var(--text-dim); font-size:0.6rem;">[NO ART]</span>
+            <span style="color: var(--text-dim); font-size:0.8rem;">[NO ART]</span>
           </div>
           <div class="track-info-details">
             <div class="track-title-text" id="track-title">Sin archivo</div>
             <div class="track-artist-text" id="track-artist">--</div>
-            <div style="font-size:0.7rem; color:var(--text-dim); margin-top:2px;" id="track-album">--</div>
+            <div style="font-size:0.75rem; color:var(--text-dim); margin-top:4px;" id="track-album">--</div>
           </div>
         </div>
 
-        <!-- Progress Bar -->
         <div class="tui-slider-group">
           <div class="tui-slider-label">
             <span id="current-time">00:00</span>
@@ -396,7 +370,6 @@
           <input type="range" id="seek-bar" value="0" min="0" max="100" step="0.1">
         </div>
 
-        <!-- Player Controls -->
         <div class="controls-grid">
           <button class="tui-btn" id="prev-btn">&lt;&lt; Prev</button>
           <button class="tui-btn tui-btn-amber" id="play-btn">Play/Pause</button>
@@ -404,7 +377,6 @@
           <button class="tui-btn tui-btn-accent" id="stop-btn">Stop</button>
         </div>
 
-        <!-- Volume & Pitch Controls -->
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px;">
           <div class="tui-slider-group">
             <div class="tui-slider-label">
@@ -423,7 +395,6 @@
           </div>
         </div>
 
-        <!-- File Loader -->
         <div style="margin-top:10px;">
           <label class="tui-btn tui-btn-amber" style="width:100%; text-align:center; cursor:pointer;">
             + Seleccionar Audio
@@ -432,7 +403,6 @@
         </div>
       </div>
 
-      <!-- Playlist Box -->
       <div class="tui-box" style="margin-top:12px;">
         <div class="tui-box-header">Playlist</div>
         <ul class="tui-list" id="playlist-ul">
@@ -592,7 +562,7 @@
     // Audio Engine Setup
     let audioCtx = null;
     let audioElement = new Audio();
-    audioElement.crossOrigin = "anonymous";
+    // SE ELIMINÓ: audioElement.crossOrigin = "anonymous"; -> Esto causaba el bloqueo de archivos locales.
     let sourceNode = null;
     let eqFilters = [];
     let currentTrackIndex = -1;
@@ -684,6 +654,9 @@
       document.getElementById('track-artist').innerText = track.artist;
       document.getElementById('track-album').innerText = track.album;
 
+      // Reset UI cover antes de leer
+      document.getElementById('cover-art').innerHTML = `<span style="color: var(--text-dim); font-size:0.8rem;">[NO ART]</span>`;
+
       // Lectura de etiquetas ID3
       if (window.jsmediatags) {
         jsmediatags.read(track.file, {
@@ -713,13 +686,11 @@
               }
               const imgUrl = `data:${format};base64,${window.btoa(base64String)}`;
               document.getElementById('cover-art').innerHTML = `<img src="${imgUrl}" alt="art">`;
-            } else {
-              document.getElementById('cover-art').innerHTML = `<span style="color: var(--text-dim); font-size:0.6rem;">[NO ART]</span>`;
             }
             renderPlaylist();
           },
           onError: function () {
-            document.getElementById('cover-art').innerHTML = `<span style="color: var(--text-dim); font-size:0.6rem;">[NO ART]</span>`;
+            // Falla silenciosa si no hay metadatos
           }
         });
       }
