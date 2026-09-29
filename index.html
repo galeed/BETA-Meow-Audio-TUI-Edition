@@ -46,7 +46,7 @@
     body {
       background-color: var(--bg);
       color: var(--text-main);
-      padding: 10px;
+      padding: env(safe-area-inset-top, 10px) 10px 10px 10px;
       min-height: 100vh;
       display: flex;
       justify-content: center;
@@ -61,6 +61,7 @@
       flex-direction: column;
       gap: 12px;
       padding-bottom: 20px;
+      margin-top: 10px; /* Espacio extra para evitar solapamiento con la barra superior del celular */
     }
 
     .tui-box {
@@ -130,10 +131,9 @@
       box-shadow: 2px 2px 0px var(--text-accent);
     }
 
-    /* Modificaciones en la visualización del reproductor y portada */
     .player-display {
       display: flex;
-      flex-direction: column; /* Centrado vertical */
+      flex-direction: column;
       gap: 15px;
       align-items: center;
       text-align: center;
@@ -146,7 +146,7 @@
       height: 250px;
       min-width: 250px;
       border: 1px dashed var(--text-amber);
-      border-radius: 0; /* Sin bordes redondeados */
+      border-radius: 0;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -335,7 +335,7 @@
 
     <div class="tui-box tui-header-main">
       <div class="tui-title">[ MEOW AUDIO APP :: TUI ]</div>
-      <div class="tui-subtitle">Sistema Audio v19.2 Mobile Fixed</div>
+      <div class="tui-subtitle">Sistema Audio v19.3 Mobile Fixed</div>
     </div>
 
     <div class="tui-tabs">
@@ -562,7 +562,6 @@
     // Audio Engine Setup
     let audioCtx = null;
     let audioElement = new Audio();
-    // SE ELIMINÓ: audioElement.crossOrigin = "anonymous"; -> Esto causaba el bloqueo de archivos locales.
     let sourceNode = null;
     let eqFilters = [];
     let currentTrackIndex = -1;
@@ -608,7 +607,7 @@
     const speedSlider = document.getElementById('speed-slider');
     const speedVal = document.getElementById('speed-val');
 
-    // Cargar Archivos de Audio
+    // Cargar Archivos de Audio con compatibilidad móvil absoluta (FileReader)
     fileInput.addEventListener('change', (e) => {
       const files = Array.from(e.target.files);
       if (!files.length) return;
@@ -647,14 +646,23 @@
       initAudioContext();
 
       const track = playlist[index];
-      const url = URL.createObjectURL(track.file);
-      audioElement.src = url;
+      
+      // Uso de FileReader para evitar bloqueos en WebKit / iOS
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        audioElement.src = e.target.result;
+        audioElement.load();
+        if (autoPlay) {
+          audioElement.play().catch(() => {});
+        }
+      };
+      reader.readAsDataURL(track.file);
 
       document.getElementById('track-title').innerText = track.title;
       document.getElementById('track-artist').innerText = track.artist;
       document.getElementById('track-album').innerText = track.album;
 
-      // Reset UI cover antes de leer
+      // Reset UI cover
       document.getElementById('cover-art').innerHTML = `<span style="color: var(--text-dim); font-size:0.8rem;">[NO ART]</span>`;
 
       // Lectura de etiquetas ID3
@@ -689,16 +697,11 @@
             }
             renderPlaylist();
           },
-          onError: function () {
-            // Falla silenciosa si no hay metadatos
-          }
+          onError: function () {}
         });
       }
 
       renderPlaylist();
-      if (autoPlay) {
-        audioElement.play().catch(() => {});
-      }
     }
 
     // Controles de Reproducción
