@@ -551,6 +551,9 @@
   </div>
 
   <script>
+  
+  
+  
     // Tab Navigation
     function switchTab(tabId, btn) {
       document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
@@ -591,6 +594,42 @@
         audioCtx.resume();
       }
     }
+
+function cargarMetadatosCodigo19(file) {
+  if (!window.jsmediatags) return;
+
+  window.jsmediatags.read(file, {
+    onSuccess: function(tag) {
+      const tags = tag.tags;
+      
+      const titulo = tags.title || file.name;
+      const artista = tags.artist || "Desconocido";
+      const album = tags.album || "Desconocido";
+      const anio = tags.year || "";
+
+
+      let imagenPortadaBase64 = null;
+      if (tags.picture) {
+        const { data, format } = tags.picture;
+        let base64String = "";
+        for (let i = 0; i < data.length; i++) {
+          base64String += String.fromCharCode(data[i]);
+        }
+        imagenPortadaBase64 = `data:${format};base64,${window.btoa(base64String)}`;
+      }
+
+document.getElementById('tuElementoTitulo').textContent = titulo;
+      document.getElementById('tuElementoArtista').textContent = artista;
+      
+if (imagenPortadaBase64) document.getElementById('tuElementoPortada').src = imagenPortadaBase64;
+    },
+    onError: function(error) {
+      console.warn("No se encontraron metadatos ID3 en este archivo.", error);
+    }
+  });
+}
+
+
 
     // Elements
     const fileInput = document.getElementById('file-input');
