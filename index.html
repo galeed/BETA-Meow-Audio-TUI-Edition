@@ -61,7 +61,7 @@
       flex-direction: column;
       gap: 12px;
       padding-bottom: 20px;
-      margin-top: 10px; /* Espacio extra para evitar solapamiento con la barra superior del celular */
+      margin-top: 10px;
     }
 
     .tui-box {
@@ -398,7 +398,7 @@
         <div style="margin-top:10px;">
           <label class="tui-btn tui-btn-amber" style="width:100%; text-align:center; cursor:pointer;">
             + Seleccionar Audio
-            <input type="file" id="fileInput" class="real-file-input" multiple accept=".mp3,.wav,.ogg,.flac,.m4a,.aac,audio/*" style="display:none;">
+            <input type="file" id="file-input" multiple accept="audio/*" style="display:none;">
           </label>
         </div>
       </div>
@@ -551,9 +551,6 @@
   </div>
 
   <script>
-  
-  
-  
     // Tab Navigation
     function switchTab(tabId, btn) {
       document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
@@ -595,42 +592,6 @@
       }
     }
 
-function cargarMetadatosCodigo19(file) {
-  if (!window.jsmediatags) return;
-
-  window.jsmediatags.read(file, {
-    onSuccess: function(tag) {
-      const tags = tag.tags;
-      
-      const titulo = tags.title || file.name;
-      const artista = tags.artist || "Desconocido";
-      const album = tags.album || "Desconocido";
-      const anio = tags.year || "";
-
-
-      let imagenPortadaBase64 = null;
-      if (tags.picture) {
-        const { data, format } = tags.picture;
-        let base64String = "";
-        for (let i = 0; i < data.length; i++) {
-          base64String += String.fromCharCode(data[i]);
-        }
-        imagenPortadaBase64 = `data:${format};base64,${window.btoa(base64String)}`;
-      }
-
-document.getElementById('tuElementoTitulo').textContent = titulo;
-      document.getElementById('tuElementoArtista').textContent = artista;
-      
-if (imagenPortadaBase64) document.getElementById('tuElementoPortada').src = imagenPortadaBase64;
-    },
-    onError: function(error) {
-      console.warn("No se encontraron metadatos ID3 en este archivo.", error);
-    }
-  });
-}
-
-
-
     // Elements
     const fileInput = document.getElementById('file-input');
     const playlistUl = document.getElementById('playlist-ul');
@@ -646,47 +607,25 @@ if (imagenPortadaBase64) document.getElementById('tuElementoPortada').src = imag
     const speedSlider = document.getElementById('speed-slider');
     const speedVal = document.getElementById('speed-val');
 
-    // Cargar Archivos de Audio con compatibilidad móvil absoluta (FileReader)
-    fileInput.addEventListener('change', async (e) => {
-      const files = Array.from(e.target.files || []);
-      if (files.length === 0) return;
+    // Cargar Archivos
+    fileInput.addEventListener('change', (e) => {
+      const files = Array.from(e.target.files);
+      if (!files.length) return;
 
-      statusEl.textContent = "Cargando...";
+      files.forEach(file => {
+        playlist.push({
+          file: file,
+          title: file.name.replace(/\.[^/.]+$/, ""),
+          artist: "Desconocido",
+          album: "Desconocido",
+          year: "--",
+          genre: "--"
+        });
+      });
 
-      try {
-        const newTracks = await Promise.all(files.map(async (file) => {
-          const ext = file.name.split('.').pop().toLowerCase();
-          const filename = file.name.replace(/\.[^/.]+$/, "");
-          
-          const metaPromise = readMetadata(file);
-          const specsPromise = parseBinaryAudioSpecs(file);
-
-          const [meta, specsText] = await Promise.all([metaPromise, specsPromise]);
-
-          return {
-            file,
-            filename,
-            ext,
-            title: meta?.title || filename,
-            artist: meta?.artist || "Biblioteca Local",
-            album: meta?.album || "",
-            cover: meta?.cover || DEFAULT_COVER,
-            specs: specsText
-          };
-        }));
-
-        playlist = [...playlist, ...newTracks];
-        statusEl.textContent = "";
-        
-        sortPlaylist();
-        renderPlaylistUI();
-
-        if (playlist.length === newTracks.length) {
-          currentIndex = 0;
-          processAndPlayTrack(currentIndex);
-        }
-      } catch (err) {
-        statusEl.textContent = "Error al cargar";
+      renderPlaylist();
+      if (currentTrackIndex === -1) {
+        loadTrack(0);
       }
     });
 
@@ -701,6 +640,54 @@ if (imagenPortadaBase64) document.getElementById('tuElementoPortada').src = imag
       });
     }
 
+    // Actualizador de UI para los metadatos
+    function updateUIMetadata(track) {
+      document.getElementById('track-title').innerText = track.title;
+      document.getElementById('track-artist').innerText = track.artist;
+      document.getElementById('track-album').innerText = track.album;
+
+      document.getElementById('tag-title-input').value = track.title;
+      document.getElementById('tag-artist-input').value = track.artist;
+      document.getElementById('tag-album-input').value = track.album;
+      document.getElementById('tag-year-input').value = track.year;
+      document.getElementById('tag-genre-input').value = track.genre;
+    }
+
+    // Fetch desde Internet (API de iTunes, gratuita y rápida)
+    function fetchOnlineMetadata(track) {
+      // Limpiamos el nombre para ayudar al buscador de la API
+      let query = track.title.replace(/_|-/g, ' ').trim(); 
+      if (track.artist && track.artist !== "Desconocido") {
+          query += " " + track.artist;
+      }
+      
+      fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=music&limit=1`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.results && data.results.length > 0) {
+            const result = data.results[0];
+            
+            // Llenamos sólo los datos que hacen falta
+            if (track.title === track.file.name.replace(/\.[^/.]+$/, "")) track.title = result.trackName;
+            if (track.artist === "Desconocido") track.artist = result.artistName;
+            if (track.album === "Desconocido") track.album = result.collectionName;
+            if (track.genre === "--" && result.primaryGenreName) track.genre = result.primaryGenreName;
+            if (track.year === "--" && result.releaseDate) track.year = result.releaseDate.substring(0, 4);
+
+            updateUIMetadata(track);
+
+            // Actualizamos la portada a alta resolución (600x600) si estaba vacía
+            const coverContainer = document.getElementById('cover-art');
+            if (coverContainer.innerHTML.includes('[NO ART]')) {
+                const artUrl = result.artworkUrl100.replace('100x100bb', '600x600bb');
+                coverContainer.innerHTML = `<img src="${artUrl}" alt="art" style="width: 100%; height: 100%; object-fit: cover;">`;
+            }
+            renderPlaylist();
+          }
+        })
+        .catch(err => console.log("No se pudo obtener metadatos online automáticamente.", err));
+    }
+
     function loadTrack(index, autoPlay = false) {
       if (index < 0 || index >= playlist.length) return;
       currentTrackIndex = index;
@@ -708,44 +695,37 @@ if (imagenPortadaBase64) document.getElementById('tuElementoPortada').src = imag
 
       const track = playlist[index];
       
-      // Uso de FileReader para evitar bloqueos en WebKit / iOS
-      const reader = new FileReader();
-      reader.onload = function (e) {
-        audioElement.src = e.target.result;
-        audioElement.load();
-        if (autoPlay) {
-          audioElement.play().catch(() => {});
-        }
-      };
-      reader.readAsDataURL(track.file);
+      // SOLUCIÓN 1: Carga nativa instantánea para soporte global (WAV, FLAC, MP3, etc.)
+      if (track.objectUrl) {
+          URL.revokeObjectURL(track.objectUrl);
+      }
+      track.objectUrl = URL.createObjectURL(track.file);
+      audioElement.src = track.objectUrl;
+      audioElement.load();
+      if (autoPlay) {
+        audioElement.play().catch(() => {});
+      }
 
+      // Reiniciar Interfaz antes de cargar
       document.getElementById('track-title').innerText = track.title;
       document.getElementById('track-artist').innerText = track.artist;
       document.getElementById('track-album').innerText = track.album;
-
-      // Reset UI cover
       document.getElementById('cover-art').innerHTML = `<span style="color: var(--text-dim); font-size:0.8rem;">[NO ART]</span>`;
 
-      // Lectura de etiquetas ID3
+      // SOLUCIÓN 2: Lectura mixta de Metadatos (Local + Online)
       if (window.jsmediatags) {
         jsmediatags.read(track.file, {
           onSuccess: function (tag) {
             const tags = tag.tags;
-            track.title = tags.title || track.title;
-            track.artist = tags.artist || "Desconocido";
-            track.album = tags.album || "Desconocido";
-            track.year = tags.year || "--";
-            track.genre = tags.genre || "--";
+            let hasLocalCover = false;
 
-            document.getElementById('track-title').innerText = track.title;
-            document.getElementById('track-artist').innerText = track.artist;
-            document.getElementById('track-album').innerText = track.album;
+            if (tags.title) track.title = tags.title;
+            if (tags.artist) track.artist = tags.artist;
+            if (tags.album) track.album = tags.album;
+            if (tags.year) track.year = tags.year;
+            if (tags.genre) track.genre = tags.genre;
 
-            document.getElementById('tag-title-input').value = track.title;
-            document.getElementById('tag-artist-input').value = track.artist;
-            document.getElementById('tag-album-input').value = track.album;
-            document.getElementById('tag-year-input').value = track.year;
-            document.getElementById('tag-genre-input').value = track.genre;
+            updateUIMetadata(track);
 
             if (tags.picture) {
               const { data, format } = tags.picture;
@@ -754,12 +734,23 @@ if (imagenPortadaBase64) document.getElementById('tuElementoPortada').src = imag
                 base64String += String.fromCharCode(data[i]);
               }
               const imgUrl = `data:${format};base64,${window.btoa(base64String)}`;
-              document.getElementById('cover-art').innerHTML = `<img src="${imgUrl}" alt="art">`;
+              document.getElementById('cover-art').innerHTML = `<img src="${imgUrl}" alt="art" style="width: 100%; height: 100%; object-fit: cover;">`;
+              hasLocalCover = true;
+            }
+
+            // Si el audio (como un FLAC local) no tiene portada o artista, buscamos online.
+            if (!hasLocalCover || track.artist === "Desconocido") {
+                fetchOnlineMetadata(track);
             }
             renderPlaylist();
           },
-          onError: function () {}
+          onError: function (error) {
+            // Error de JSmediatags (muy común al leer WAV o FLAC) -> Buscamos online como respaldo
+            fetchOnlineMetadata(track);
+          }
         });
+      } else {
+         fetchOnlineMetadata(track);
       }
 
       renderPlaylist();
