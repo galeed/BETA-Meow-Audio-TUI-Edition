@@ -330,12 +330,15 @@
 </head>
 
 <body>
+  
+  <!-- REPRODUCTOR ANCLADO AL HTML PARA EVITAR BLOQUEO DE MEMORIA EN MÓVILES -->
+  <audio id="main-audio" crossorigin="anonymous" style="display:none;"></audio>
 
   <div class="tui-container">
 
     <div class="tui-box tui-header-main">
-      <div class="tui-title">[ MEOW AUDIO APP :: TUI VERSION ]</div>
-      <div class="tui-subtitle">Sistema Audio v19.3 Mobile Fixed</div>
+      <div class="tui-title">[ MEOW AUDIO APP :: TUI ]</div>
+      <div class="tui-subtitle">Sistema Audio v19.4 Core Fix</div>
     </div>
 
     <div class="tui-tabs">
@@ -398,7 +401,8 @@
         <div style="margin-top:10px;">
           <label class="tui-btn tui-btn-amber" style="width:100%; text-align:center; cursor:pointer;">
             + Seleccionar Audio
-            <input type="file" id="file-input" multiple accept="audio/*" style="display:none;">
+            <!-- EXPANSIÓN DE EXTENSIONES PARA EVITAR BLOQUEOS DEL SISTEMA -->
+            <input type="file" id="file-input" multiple accept="audio/*, .mp3, .wav, .flac, .ogg, .m4a, .aac" style="display:none;">
           </label>
         </div>
       </div>
@@ -559,9 +563,10 @@
       if (btn) btn.classList.add('active');
     }
 
-    // Audio Engine Setup
+    // Vinculación al Audio del HTML (Previene cierres por falta de memoria)
+    const audioElement = document.getElementById('main-audio');
+    
     let audioCtx = null;
-    let audioElement = new Audio();
     let sourceNode = null;
     let eqFilters = [];
     let currentTrackIndex = -1;
@@ -569,9 +574,13 @@
 
     const eqFrequencies = [60, 170, 310, 600, 1000, 3000, 6000, 12000];
 
+    // Inicializador seguro: Solo se debe llamar tras un CLIC DEL USUARIO
     function initAudioContext() {
       if (!audioCtx) {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+        
+        audioCtx = new AudioContext();
         sourceNode = audioCtx.createMediaElementSource(audioElement);
 
         let previousNode = sourceNode;
@@ -579,7 +588,11 @@
           let filter = audioCtx.createBiquadFilter();
           filter.type = idx === 0 ? 'lowshelf' : (idx === eqFrequencies.length - 1 ? 'highshelf' : 'peaking');
           filter.frequency.value = freq;
-          filter.gain.value = 0;
+          
+          // Leer valor actual del DOM por si movieron el slider antes del play
+          const sliderVal = parseFloat(document.querySelector(`.eq-band[data-band="${idx}"]`).value);
+          filter.gain.value = sliderVal || 0;
+          
           previousNode.connect(filter);
           previousNode = filter;
           eqFilters.push(filter);
@@ -587,7 +600,7 @@
 
         previousNode.connect(audioCtx.destination);
       }
-      if (audioCtx.state === 'suspended') {
+      if (audioCtx && audioCtx.state === 'suspended') {
         audioCtx.resume();
       }
     }
@@ -625,6 +638,7 @@
 
       renderPlaylist();
       if (currentTrackIndex === -1) {
+        // Carga la pista, pero NO inicializa AudioContext todavía.
         loadTrack(0);
       }
     });
@@ -635,12 +649,16 @@
         const li = document.createElement('li');
         li.className = `tui-list-item ${index === currentTrackIndex ? 'active' : ''}`;
         li.innerHTML = `<span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">[${index + 1}] ${track.title}</span>`;
-        li.onclick = () => loadTrack(index, true);
+        
+        // Al dar clic en la lista (esto es interacción humana), sí podemos conectar el AudioContext
+        li.onclick = () => {
+          try { initAudioContext(); } catch(err){}
+          loadTrack(index, true);
+        };
         playlistUl.appendChild(li);
       });
     }
 
-    // Actualizador de UI para los metadatos
     function updateUIMetadata(track) {
       document.getElementById('track-title').innerText = track.title;
       document.getElementById('track-artist').innerText = track.artist;
@@ -653,21 +671,16 @@
       document.getElementById('tag-genre-input').value = track.genre;
     }
 
-    // Fetch desde Internet (API de iTunes, gratuita y rápida)
+    // Buscador Inteligente
     function fetchOnlineMetadata(track) {
-      // Limpiamos el nombre para ayudar al buscador de la API
       let query = track.title.replace(/_|-/g, ' ').trim(); 
-      if (track.artist && track.artist !== "Desconocido") {
-          query += " " + track.artist;
-      }
+      if (track.artist && track.artist !== "Desconocido") query += " " + track.artist;
       
       fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=music&limit=1`)
         .then(res => res.json())
         .then(data => {
           if (data.results && data.results.length > 0) {
             const result = data.results[0];
-            
-            // Llenamos sólo los datos que hacen falta
             if (track.title === track.file.name.replace(/\.[^/.]+$/, "")) track.title = result.trackName;
             if (track.artist === "Desconocido") track.artist = result.artistName;
             if (track.album === "Desconocido") track.album = result.collectionName;
@@ -676,7 +689,6 @@
 
             updateUIMetadata(track);
 
-            // Actualizamos la portada a alta resolución (600x600) si estaba vacía
             const coverContainer = document.getElementById('cover-art');
             if (coverContainer.innerHTML.includes('[NO ART]')) {
                 const artUrl = result.artworkUrl100.replace('100x100bb', '600x600bb');
@@ -684,84 +696,84 @@
             }
             renderPlaylist();
           }
-        })
-        .catch(err => console.log("No se pudo obtener metadatos online automáticamente.", err));
+        }).catch(() => {});
     }
 
     function loadTrack(index, autoPlay = false) {
       if (index < 0 || index >= playlist.length) return;
       currentTrackIndex = index;
-      initAudioContext();
 
       const track = playlist[index];
       
-      // SOLUCIÓN 1: Carga nativa instantánea para soporte global (WAV, FLAC, MP3, etc.)
-      if (track.objectUrl) {
-          URL.revokeObjectURL(track.objectUrl);
-      }
+      // Manejo de la URL local: limpia memoria y genera el track virtual
+      if (track.objectUrl) URL.revokeObjectURL(track.objectUrl);
       track.objectUrl = URL.createObjectURL(track.file);
+      
       audioElement.src = track.objectUrl;
       audioElement.load();
+
       if (autoPlay) {
-        audioElement.play().catch(() => {});
+        audioElement.play().catch(e => console.warn("AutoPlay bloqueado hasta tocar la pantalla", e));
       }
 
-      // Reiniciar Interfaz antes de cargar
+      // Reiniciar Interfaz Visual
       document.getElementById('track-title').innerText = track.title;
       document.getElementById('track-artist').innerText = track.artist;
       document.getElementById('track-album').innerText = track.album;
       document.getElementById('cover-art').innerHTML = `<span style="color: var(--text-dim); font-size:0.8rem;">[NO ART]</span>`;
 
-      // SOLUCIÓN 2: Lectura mixta de Metadatos (Local + Online)
+      // Extractor seguro a prueba de errores
       if (window.jsmediatags) {
-        jsmediatags.read(track.file, {
-          onSuccess: function (tag) {
-            const tags = tag.tags;
-            let hasLocalCover = false;
+        try {
+          jsmediatags.read(track.file, {
+            onSuccess: function (tag) {
+              const tags = tag.tags;
+              let hasLocalCover = false;
 
-            if (tags.title) track.title = tags.title;
-            if (tags.artist) track.artist = tags.artist;
-            if (tags.album) track.album = tags.album;
-            if (tags.year) track.year = tags.year;
-            if (tags.genre) track.genre = tags.genre;
+              if (tags.title) track.title = tags.title;
+              if (tags.artist) track.artist = tags.artist;
+              if (tags.album) track.album = tags.album;
+              if (tags.year) track.year = tags.year;
+              if (tags.genre) track.genre = tags.genre;
 
-            updateUIMetadata(track);
+              updateUIMetadata(track);
 
-            if (tags.picture) {
-              const { data, format } = tags.picture;
-              let base64String = "";
-              for (let i = 0; i < data.length; i++) {
-                base64String += String.fromCharCode(data[i]);
+              if (tags.picture) {
+                const { data, format } = tags.picture;
+                let base64String = "";
+                for (let i = 0; i < data.length; i++) {
+                  base64String += String.fromCharCode(data[i]);
+                }
+                const imgUrl = `data:${format};base64,${window.btoa(base64String)}`;
+                document.getElementById('cover-art').innerHTML = `<img src="${imgUrl}" alt="art" style="width: 100%; height: 100%; object-fit: cover;">`;
+                hasLocalCover = true;
               }
-              const imgUrl = `data:${format};base64,${window.btoa(base64String)}`;
-              document.getElementById('cover-art').innerHTML = `<img src="${imgUrl}" alt="art" style="width: 100%; height: 100%; object-fit: cover;">`;
-              hasLocalCover = true;
-            }
 
-            // Si el audio (como un FLAC local) no tiene portada o artista, buscamos online.
-            if (!hasLocalCover || track.artist === "Desconocido") {
-                fetchOnlineMetadata(track);
+              if (!hasLocalCover || track.artist === "Desconocido") {
+                  fetchOnlineMetadata(track);
+              }
+              renderPlaylist();
+            },
+            onError: function () {
+              fetchOnlineMetadata(track);
             }
-            renderPlaylist();
-          },
-          onError: function (error) {
-            // Error de JSmediatags (muy común al leer WAV o FLAC) -> Buscamos online como respaldo
-            fetchOnlineMetadata(track);
-          }
-        });
+          });
+        } catch (err) {
+          fetchOnlineMetadata(track);
+        }
       } else {
          fetchOnlineMetadata(track);
       }
-
       renderPlaylist();
     }
 
-    // Controles de Reproducción
+    // Controles Físicos (AQUÍ sí encendemos el AudioContext con seguridad)
     playBtn.addEventListener('click', () => {
-      initAudioContext();
+      try { initAudioContext(); } catch(e) {}
+      
       if (!audioElement.src) return;
       if (audioElement.paused) {
-        audioElement.play();
+        audioElement.play().catch(e => alert("Error de reproducción: " + e.message));
       } else {
         audioElement.pause();
       }
@@ -773,11 +785,17 @@
     });
 
     prevBtn.addEventListener('click', () => {
-      if (currentTrackIndex > 0) loadTrack(currentTrackIndex - 1, true);
+      if (currentTrackIndex > 0) {
+        try { initAudioContext(); } catch(e){}
+        loadTrack(currentTrackIndex - 1, true);
+      }
     });
 
     nextBtn.addEventListener('click', () => {
-      if (currentTrackIndex < playlist.length - 1) loadTrack(currentTrackIndex + 1, true);
+      if (currentTrackIndex < playlist.length - 1) {
+        try { initAudioContext(); } catch(e){}
+        loadTrack(currentTrackIndex + 1, true);
+      }
     });
 
     audioElement.addEventListener('timeupdate', () => {
@@ -816,7 +834,7 @@
       slider.addEventListener('input', (e) => {
         const bandIndex = parseInt(e.target.getAttribute('data-band'));
         const gainValue = parseFloat(e.target.value);
-        if (eqFilters[bandIndex]) {
+        if (eqFilters.length > 0 && eqFilters[bandIndex]) {
           eqFilters[bandIndex].gain.value = gainValue;
         }
         e.target.nextElementSibling.innerText = `${gainValue > 0 ? '+' : ''}${gainValue}dB`;
@@ -826,7 +844,7 @@
     document.getElementById('reset-eq-btn').addEventListener('click', () => {
       document.querySelectorAll('.eq-band').forEach((slider, idx) => {
         slider.value = 0;
-        if (eqFilters[idx]) eqFilters[idx].gain.value = 0;
+        if (eqFilters.length > 0 && eqFilters[idx]) eqFilters[idx].gain.value = 0;
         slider.nextElementSibling.innerText = "0dB";
       });
     });
@@ -853,6 +871,7 @@
 
     document.getElementById('preview-trim-btn').addEventListener('click', () => {
       if (!audioElement.src) return;
+      try { initAudioContext(); } catch(e){}
       audioElement.currentTime = parseFloat(trimStart.value);
       audioElement.play();
       const checkEnd = setInterval(() => {
