@@ -338,8 +338,8 @@
   <div class="tui-container">
 
     <div class="tui-box tui-header-main">
-      <div class="tui-title">[ MEOW AUDIO APP :: TUI EDITION ]</div>
-      <div class="tui-subtitle">Sistema Audio v20.1 True Background & Native Controls</div>
+      <div class="tui-title">[ MEOW AUDIO APP :: TUI ]</div>
+      <div class="tui-subtitle">Sistema Audio v20.2 True Background & Next/Prev Controls</div>
     </div>
 
     <div class="tui-tabs">
@@ -532,7 +532,7 @@
     let currentTrackIndex = -1;
     let playlist = [];
 
-    // CONFIGURACIÓN Y SINCRONIZACIÓN DE MEDIA SESSION (iOS / Android Screen Lock Controls)
+    // CONFIGURACIÓN DE MEDIA SESSION (Fuerza íconos Next/Prev eliminando seekbackward/seekforward)
     function setupMediaSessionHandlers() {
       if (!('mediaSession' in navigator)) return;
 
@@ -541,7 +541,13 @@
       navigator.mediaSession.setActionHandler('previoustrack', () => { document.getElementById('prev-btn').click(); });
       navigator.mediaSession.setActionHandler('nexttrack', () => { document.getElementById('next-btn').click(); });
 
-      // Habilitar la barra de tiempo deslizable en pantalla de bloqueo
+      // Desactivar handlers de salto de tiempo para forzar que iOS/Android muestren los botones de cambiar canción
+      try {
+        navigator.mediaSession.setActionHandler('seekbackward', null);
+        navigator.mediaSession.setActionHandler('seekforward', null);
+      } catch (e) {}
+
+      // Mantiene la barra deslizable interactiva
       try {
         navigator.mediaSession.setActionHandler('seekto', (details) => {
           if (details.fastSeek && ('fastSeek' in audioElement)) {
@@ -554,20 +560,6 @@
       } catch (e) {
         console.warn("MediaSession seekto no es soportado en este navegador.");
       }
-
-      try {
-        navigator.mediaSession.setActionHandler('seekbackward', (details) => {
-          const skipTime = details.seekOffset || 10;
-          audioElement.currentTime = Math.max(audioElement.currentTime - skipTime, 0);
-          updatePositionState();
-        });
-
-        navigator.mediaSession.setActionHandler('seekforward', (details) => {
-          const skipTime = details.seekOffset || 10;
-          audioElement.currentTime = Math.min(audioElement.currentTime + skipTime, audioElement.duration);
-          updatePositionState();
-        });
-      } catch (e) {}
     }
 
     function updateMediaMetadata(track, imgUrl = null) {
@@ -798,7 +790,6 @@
       }
     });
 
-    // Sincronización continua de la barra de progreso
     audioElement.addEventListener('timeupdate', () => {
       if (!isNaN(audioElement.duration) && audioElement.duration > 0) {
         const progress = (audioElement.currentTime / audioElement.duration) * 100;
@@ -806,7 +797,6 @@
         currentTimeEl.innerText = formatTime(audioElement.currentTime);
         durationTimeEl.innerText = formatTime(audioElement.duration);
         
-        // Notifica al sistema operativo el segundo actual
         updatePositionState();
       }
     });
