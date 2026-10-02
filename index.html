@@ -314,6 +314,8 @@
       background: var(--bg);
       padding: 6px 2px;
       border: 1px solid var(--border-color);
+      opacity: 0.5; /* Visual feedback de que está inactivo */
+      pointer-events: none;
     }
 
     .eq-slider-vertical input[type="range"] {
@@ -331,13 +333,14 @@
 
 <body>
   
-  <audio id="main-audio" crossorigin="anonymous" style="display:none;"></audio>
+  <!-- ATRIBUTO PLAYSINLINE AÑADIDO: Vital para iOS/Android en segundo plano -->
+  <audio id="main-audio" crossorigin="anonymous" playsinline style="display:none;"></audio>
 
   <div class="tui-container">
 
     <div class="tui-box tui-header-main">
       <div class="tui-title">[ MEOW AUDIO APP :: TUI ]</div>
-      <div class="tui-subtitle">Sistema Audio v19.5 Background Fix</div>
+      <div class="tui-subtitle">Sistema Audio v20.0 True Background</div>
     </div>
 
     <div class="tui-tabs">
@@ -413,57 +416,55 @@
       </div>
     </div>
 
-    <!-- TAB 2: EQUALIZER -->
+    <!-- TAB 2: EQUALIZER (DESACTIVADO PARA SEGUNDO PLANO) -->
     <div id="eq-tab" class="tab-content hidden">
       <div class="tui-box">
-        <div class="tui-box-header">Ecualizador</div>
-        <p style="font-size:0.75rem; color:var(--text-dim); margin-bottom:8px;">Ajusta las frecuencias:</p>
+        <div class="tui-box-header" style="color:var(--text-accent);">EQ Desactivado</div>
+        <p style="font-size:0.75rem; color:var(--text-accent); margin-bottom:8px; font-weight:bold;">
+          [INFO] El ecualizador fue deshabilitado para garantizar que la música no se corte al bloquear la pantalla o minimizar el navegador.
+        </p>
 
         <div class="eq-grid">
           <div class="eq-slider-vertical">
             <span style="font-size:0.65rem;">60Hz</span>
-            <input type="range" class="eq-band" data-band="0" min="-12" max="12" value="0" step="0.5">
+            <input type="range" disabled value="0">
             <span class="eq-val" style="font-size:0.65rem;">0dB</span>
           </div>
           <div class="eq-slider-vertical">
             <span style="font-size:0.65rem;">170Hz</span>
-            <input type="range" class="eq-band" data-band="1" min="-12" max="12" value="0" step="0.5">
+            <input type="range" disabled value="0">
             <span class="eq-val" style="font-size:0.65rem;">0dB</span>
           </div>
           <div class="eq-slider-vertical">
             <span style="font-size:0.65rem;">310Hz</span>
-            <input type="range" class="eq-band" data-band="2" min="-12" max="12" value="0" step="0.5">
+            <input type="range" disabled value="0">
             <span class="eq-val" style="font-size:0.65rem;">0dB</span>
           </div>
           <div class="eq-slider-vertical">
             <span style="font-size:0.65rem;">600Hz</span>
-            <input type="range" class="eq-band" data-band="3" min="-12" max="12" value="0" step="0.5">
+            <input type="range" disabled value="0">
             <span class="eq-val" style="font-size:0.65rem;">0dB</span>
           </div>
           <div class="eq-slider-vertical">
             <span style="font-size:0.65rem;">1kHz</span>
-            <input type="range" class="eq-band" data-band="4" min="-12" max="12" value="0" step="0.5">
+            <input type="range" disabled value="0">
             <span class="eq-val" style="font-size:0.65rem;">0dB</span>
           </div>
           <div class="eq-slider-vertical">
             <span style="font-size:0.65rem;">3kHz</span>
-            <input type="range" class="eq-band" data-band="5" min="-12" max="12" value="0" step="0.5">
+            <input type="range" disabled value="0">
             <span class="eq-val" style="font-size:0.65rem;">0dB</span>
           </div>
           <div class="eq-slider-vertical">
             <span style="font-size:0.65rem;">6kHz</span>
-            <input type="range" class="eq-band" data-band="6" min="-12" max="12" value="0" step="0.5">
+            <input type="range" disabled value="0">
             <span class="eq-val" style="font-size:0.65rem;">0dB</span>
           </div>
           <div class="eq-slider-vertical">
             <span style="font-size:0.65rem;">12kHz</span>
-            <input type="range" class="eq-band" data-band="7" min="-12" max="12" value="0" step="0.5">
+            <input type="range" disabled value="0">
             <span class="eq-val" style="font-size:0.65rem;">0dB</span>
           </div>
-        </div>
-
-        <div style="margin-top:12px; text-align:right;">
-          <button class="tui-btn tui-btn-accent" id="reset-eq-btn">Reset EQ</button>
         </div>
       </div>
     </div>
@@ -553,7 +554,6 @@
   </div>
 
   <script>
-    // Tab Navigation
     function switchTab(tabId, btn) {
       document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
       document.querySelectorAll('.tui-tab-btn').forEach(el => el.classList.remove('active'));
@@ -562,44 +562,10 @@
     }
 
     const audioElement = document.getElementById('main-audio');
-    let audioCtx = null;
-    let sourceNode = null;
-    let eqFilters = [];
     let currentTrackIndex = -1;
     let playlist = [];
 
-    const eqFrequencies = [60, 170, 310, 600, 1000, 3000, 6000, 12000];
-
-    function initAudioContext() {
-      if (!audioCtx) {
-        const AudioContext = window.AudioContext || window.webkitAudioContext;
-        if (!AudioContext) return;
-        
-        audioCtx = new AudioContext();
-        sourceNode = audioCtx.createMediaElementSource(audioElement);
-
-        let previousNode = sourceNode;
-        eqFrequencies.forEach((freq, idx) => {
-          let filter = audioCtx.createBiquadFilter();
-          filter.type = idx === 0 ? 'lowshelf' : (idx === eqFrequencies.length - 1 ? 'highshelf' : 'peaking');
-          filter.frequency.value = freq;
-          
-          const sliderVal = parseFloat(document.querySelector(`.eq-band[data-band="${idx}"]`).value);
-          filter.gain.value = sliderVal || 0;
-          
-          previousNode.connect(filter);
-          previousNode = filter;
-          eqFilters.push(filter);
-        });
-
-        previousNode.connect(audioCtx.destination);
-      }
-      if (audioCtx && audioCtx.state === 'suspended') {
-        audioCtx.resume();
-      }
-    }
-
-    // NUEVO: SISTEMA MEDIA SESSION PARA SEGUNDO PLANO Y PANTALLA BLOQUEADA
+    // SISTEMA MEDIA SESSION PARA CONTROLES DE PANTALLA BLOQUEADA
     function updateMediaSession(track, imgUrl = null) {
       if ('mediaSession' in navigator) {
         let artworkArray = [];
@@ -614,7 +580,6 @@
           artwork: artworkArray
         });
 
-        // Enlazar los botones físicos/Bluetooth del celular con nuestra app
         navigator.mediaSession.setActionHandler('play', () => { audioElement.play(); });
         navigator.mediaSession.setActionHandler('pause', () => { audioElement.pause(); });
         navigator.mediaSession.setActionHandler('previoustrack', () => { document.getElementById('prev-btn').click(); });
@@ -665,7 +630,6 @@
         li.innerHTML = `<span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">[${index + 1}] ${track.title}</span>`;
         
         li.onclick = () => {
-          try { initAudioContext(); } catch(err){}
           loadTrack(index, true);
         };
         playlistUl.appendChild(li);
@@ -708,7 +672,6 @@
                 coverContainer.innerHTML = `<img src="${finalArtUrl}" alt="art" style="width: 100%; height: 100%; object-fit: cover;">`;
             }
             
-            // Actualizar la pantalla de bloqueo con la imagen descargada de internet
             updateMediaSession(track, finalArtUrl);
             renderPlaylist();
           }
@@ -728,7 +691,7 @@
       audioElement.load();
 
       if (autoPlay) {
-        audioElement.play().catch(e => console.warn("AutoPlay bloqueado hasta tocar la pantalla", e));
+        audioElement.play().catch(e => console.warn("Toca la pantalla para reproducir", e));
       }
 
       document.getElementById('track-title').innerText = track.title;
@@ -736,7 +699,6 @@
       document.getElementById('track-album').innerText = track.album;
       document.getElementById('cover-art').innerHTML = `<span style="color: var(--text-dim); font-size:0.8rem;">[NO ART]</span>`;
       
-      // Actualización temprana de la pantalla de bloqueo sin imagen (por si falla la lectura de tags)
       updateMediaSession(track);
 
       if (window.jsmediatags) {
@@ -765,7 +727,6 @@
                 document.getElementById('cover-art').innerHTML = `<img src="${finalImgUrl}" alt="art" style="width: 100%; height: 100%; object-fit: cover;">`;
                 hasLocalCover = true;
                 
-                // Actualizar la pantalla de bloqueo con la portada local del archivo
                 updateMediaSession(track, finalImgUrl);
               }
 
@@ -790,8 +751,6 @@
     }
 
     playBtn.addEventListener('click', () => {
-      try { initAudioContext(); } catch(e) {}
-      
       if (!audioElement.src) return;
       if (audioElement.paused) {
         audioElement.play().catch(e => alert("Error de reproducción: " + e.message));
@@ -807,19 +766,16 @@
 
     prevBtn.addEventListener('click', () => {
       if (currentTrackIndex > 0) {
-        try { initAudioContext(); } catch(e){}
         loadTrack(currentTrackIndex - 1, true);
       }
     });
 
     nextBtn.addEventListener('click', () => {
       if (currentTrackIndex < playlist.length - 1) {
-        try { initAudioContext(); } catch(e){}
         loadTrack(currentTrackIndex + 1, true);
       }
     });
 
-    // Pasar automáticamente a la siguiente canción cuando termina una
     audioElement.addEventListener('ended', () => {
         if (currentTrackIndex < playlist.length - 1) {
             loadTrack(currentTrackIndex + 1, true);
@@ -857,25 +813,6 @@
       return `${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
     }
 
-    document.querySelectorAll('.eq-band').forEach(slider => {
-      slider.addEventListener('input', (e) => {
-        const bandIndex = parseInt(e.target.getAttribute('data-band'));
-        const gainValue = parseFloat(e.target.value);
-        if (eqFilters.length > 0 && eqFilters[bandIndex]) {
-          eqFilters[bandIndex].gain.value = gainValue;
-        }
-        e.target.nextElementSibling.innerText = `${gainValue > 0 ? '+' : ''}${gainValue}dB`;
-      });
-    });
-
-    document.getElementById('reset-eq-btn').addEventListener('click', () => {
-      document.querySelectorAll('.eq-band').forEach((slider, idx) => {
-        slider.value = 0;
-        if (eqFilters.length > 0 && eqFilters[idx]) eqFilters[idx].gain.value = 0;
-        slider.nextElementSibling.innerText = "0dB";
-      });
-    });
-
     const trimStart = document.getElementById('trim-start');
     const trimEnd = document.getElementById('trim-end');
 
@@ -897,7 +834,6 @@
 
     document.getElementById('preview-trim-btn').addEventListener('click', () => {
       if (!audioElement.src) return;
-      try { initAudioContext(); } catch(e){}
       audioElement.currentTime = parseFloat(trimStart.value);
       audioElement.play();
       const checkEnd = setInterval(() => {
