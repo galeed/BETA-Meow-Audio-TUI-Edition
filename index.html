@@ -541,11 +541,7 @@
       navigator.mediaSession.setActionHandler('previoustrack', () => { document.getElementById('prev-btn').click(); });
       navigator.mediaSession.setActionHandler('nexttrack', () => { document.getElementById('next-btn').click(); });
 
-      // Desactivar handlers de salto de tiempo para forzar que iOS/Android muestren los botones de cambiar canción
-      try {
-        navigator.mediaSession.setActionHandler('seekbackward', null);
-        navigator.mediaSession.setActionHandler('seekforward', null);
-      } catch (e) {}
+
 
       // Mantiene la barra deslizable interactiva
       try {
